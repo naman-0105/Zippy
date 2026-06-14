@@ -14,3 +14,18 @@ export const verifyRazorpaySignature = (
 
   return expectedSignature === signature;
 };
+
+export const verifyRazorpayWebhookSignature = (
+  body: string | object,
+  signature: string,
+  secret: string
+) => {
+  const payload = typeof body === "string" ? body : JSON.stringify(body);
+
+  const expectedSignature = crypto
+    .createHmac("sha256", secret)
+    .update(payload)
+    .digest("hex");
+
+  return expectedSignature === signature;
+};

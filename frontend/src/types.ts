@@ -112,7 +112,7 @@ export interface IOrder {
     | "delivered"
     | "cancelled";
 
-  paymentMethod: "razorpay" | "stripe";
+  paymentMethod: "razorpay";
   paymentStatus: "pending" | "paid" | "failed";
 
   expiresAt: Date;

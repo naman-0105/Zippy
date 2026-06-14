@@ -16,7 +16,7 @@ export const createOrder = TryCatch(async (req: AuthenticatedRequest, res) => {
     });
   }
 
-  const { paymentMethod, addressId } = req.body;
+  const { paymentMethod = "razorpay", addressId } = req.body;
 
   if (!addressId) {
     return res.status(400).json({

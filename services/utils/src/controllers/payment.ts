@@ -1,73 +1,13 @@
 import { Request, Response } from "express";
 import axios from "axios";
 import { razorpay } from "../config/razorpay.js";
-import { verifyRazorpaySignature } from "../config/verifyRazorpay.js";
+import {
+  verifyRazorpaySignature,
+  verifyRazorpayWebhookSignature,
+} from "../config/verifyRazorpay.js";
 import { publishPaymentSuccess } from "../config/payment.producer.js";
 
 export const createRazorpayOrder = async (req: Request, res: Response) => {
-  const { orderId } = req.body;
-
-  const { data } = await axios.get(
-    `${process.env.RESTAURANT_SERVICE}/api/order/payment/${orderId}`,
-    {
-      headers: {
-        "x-internal-key": process.env.INTERNAL_SERVICE_KEY,
-      },
-    }
-  );
-
-  const razorpayOrder = await razorpay.orders.create({
-    amount: data.amount * 100,
-    currency: "INR",
-    receipt: orderId,
-  });
-
-  res.json({
-    razorpayOrderId: razorpayOrder.id,
-    key: process.env.RAZORPAY_KEY_ID,
-  });
-};
-
-export const verifyRazorpayPayment = async (req: Request, res: Response) => {
-  const {
-    razorpay_order_id,
-    razorpay_payment_id,
-    razorpay_signature,
-    orderId,
-  } = req.body;
-
-  const isValid = verifyRazorpaySignature(
-    razorpay_order_id,
-    razorpay_payment_id,
-    razorpay_signature
-  );
-
-  if (!isValid) {
-    return res.status(400).json({
-      message: "Payment verification failed",
-    });
-  }
-
-  await publishPaymentSuccess({
-    orderId,
-    paymentId: razorpay_payment_id,
-    provider: "razorpay",
-  });
-
-  res.json({
-    message: "Payment verified successfully",
-  });
-};
-
-import dotenv from "dotenv";
-
-dotenv.config();
-
-import Stripe from "stripe";
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
-
-export const payWithStripe = async (req: Request, res: Response) => {
   try {
     const { orderId } = req.body;
 
@@ -80,73 +20,114 @@ export const payWithStripe = async (req: Request, res: Response) => {
       }
     );
 
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ["card"],
-      mode: "payment",
-
-      line_items: [
-        {
-          price_data: {
-            currency: "inr",
-            product_data: {
-              name: "Zippy food order",
-            },
-            unit_amount: data.amount * 100,
-          },
-          quantity: 1,
-        },
-      ],
-
-      metadata: {
+    const razorpayOrder = await razorpay.orders.create({
+      amount: Math.round(data.amount * 100),
+      currency: "INR",
+      receipt: orderId,
+      notes: {
         orderId,
       },
-
-      success_url: `${process.env.FRONTEND_URL}/ordersuccess?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.FRONTEND_URL}/checkout`,
     });
 
     res.json({
-      url: session.url,
+      razorpayOrderId: razorpayOrder.id,
+      key: process.env.RAZORPAY_KEY_ID,
     });
   } catch (error) {
     res.status(500).json({
-      message: "stripe payment failed",
+      message: "Failed to create Razorpay order",
     });
   }
 };
 
-export const verifyStripe = async (req: Request, res: Response) => {
-  const { sessionId } = req.body;
-
+export const verifyRazorpayPayment = async (req: Request, res: Response) => {
   try {
-    const session = await stripe.checkout.sessions.retrieve(sessionId);
+    const {
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature,
+      orderId,
+    } = req.body;
 
-    if (!session) {
+    const isValid = verifyRazorpaySignature(
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature
+    );
+
+    if (!isValid) {
       return res.status(400).json({
-        message: "Payment verifcation failed",
-      });
-    }
-
-    const orderId = session.metadata?.orderId;
-
-    if (!orderId) {
-      return res.status(400).json({
-        message: "orderid not found in stripe session",
+        message: "Payment verification failed",
       });
     }
 
     await publishPaymentSuccess({
       orderId,
-      paymentId: sessionId,
-      provider: "stripe",
+      paymentId: razorpay_payment_id,
+      provider: "razorpay",
     });
 
     res.json({
-      message: "payment verified successfully",
+      message: "Payment verified successfully",
     });
   } catch (error) {
     res.status(500).json({
-      message: "stripe payment failed",
+      message: "Payment verification error",
+    });
+  }
+};
+
+export const razorpayWebhook = async (req: Request, res: Response) => {
+  try {
+    const signature = req.headers["x-razorpay-signature"] as string;
+    const webhookSecret =
+      process.env.RAZORPAY_WEBHOOK_SECRET || process.env.RAZORPAY_KEY_SECRET;
+
+    if (!signature || !webhookSecret) {
+      return res.status(400).json({
+        message: "Missing webhook signature or secret",
+      });
+    }
+
+    const isValid = verifyRazorpayWebhookSignature(
+      req.body,
+      signature,
+      webhookSecret
+    );
+
+    if (!isValid) {
+      return res.status(400).json({
+        message: "Invalid webhook signature",
+      });
+    }
+
+    const event = req.body.event;
+
+    if (event === "payment.captured" || event === "order.paid") {
+      const paymentEntity = req.body.payload?.payment?.entity;
+      const orderEntity = req.body.payload?.order?.entity;
+
+      const orderId =
+        paymentEntity?.notes?.orderId ||
+        paymentEntity?.receipt ||
+        orderEntity?.notes?.orderId ||
+        orderEntity?.receipt;
+
+      const paymentId = paymentEntity?.id || orderEntity?.id;
+
+      if (orderId && paymentId) {
+        await publishPaymentSuccess({
+          orderId,
+          paymentId,
+          provider: "razorpay",
+        });
+      }
+    }
+
+    res.json({ status: "ok" });
+  } catch (error) {
+    res.status(500).json({
+      message: "Webhook processing error",
     });
   }
 };
