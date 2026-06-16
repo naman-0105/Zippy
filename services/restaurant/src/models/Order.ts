@@ -44,6 +44,11 @@ export interface IOrder extends Document {
   paymentMethod: "razorpay";
   paymentStatus: "pending" | "paid" | "failed";
 
+  deliveryOtp: string;
+  deliveryOtpVerified: boolean;
+  deliveryOtpVerifiedAt: Date | null;
+  deliveredAt: Date | null;
+
   expiresAt: Date;
 
   createdAt: Date;
@@ -137,6 +142,23 @@ const OrderSchema = new Schema<IOrder>(
       type: String,
       enum: ["pending", "paid", "failed"],
       default: "pending",
+    },
+
+    deliveryOtp: {
+      type: String,
+      required: true,
+    },
+    deliveryOtpVerified: {
+      type: Boolean,
+      default: false,
+    },
+    deliveryOtpVerifiedAt: {
+      type: Date,
+      default: null,
+    },
+    deliveredAt: {
+      type: Date,
+      default: null,
     },
 
     expiresAt: {

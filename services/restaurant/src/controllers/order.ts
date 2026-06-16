@@ -126,6 +126,8 @@ export const createOrder = TryCatch(async (req: AuthenticatedRequest, res) => {
 
   const riderAmount = Math.ceil(distance) * 17;
 
+  const deliveryOtp = Math.floor(1000 + Math.random() * 9000).toString();
+
   const order = await Order.create({
     userId: user._id.toString(),
     restaurantId: restaurantId.toString(),
@@ -149,6 +151,10 @@ export const createOrder = TryCatch(async (req: AuthenticatedRequest, res) => {
     paymentMethod,
     paymentStatus: "pending",
     status: "placed",
+    deliveryOtp,
+    deliveryOtpVerified: false,
+    deliveryOtpVerifiedAt: null,
+    deliveredAt: null,
     expiresAt,
   });
 
@@ -424,10 +430,19 @@ export const assignRiderToOrder = TryCatch(async (req, res) => {
     }
   );
 
+  if (!orderUpdated) {
+    return res.status(400).json({
+      message: "Order already taken or not found",
+    });
+  }
+
+  const orderResponse = orderUpdated.toObject();
+  delete (orderResponse as any).deliveryOtp;
+
   res.json({
     message: "Rider Assigned Successfully",
     success: true,
-    order: orderUpdated,
+    order: orderResponse,
   });
 });
 
@@ -449,7 +464,9 @@ export const getCurrentOrderForRider = TryCatch(async (req, res) => {
   const order = await Order.findOne({
     riderId,
     status: { $ne: "delivered" },
-  }).populate("restaurantId");
+  })
+    .populate("restaurantId")
+    .select("-deliveryOtp");
 
   if (!order) {
     return res.status(404).json({
@@ -510,46 +527,143 @@ export const updateOrderStatusRider = TryCatch(async (req, res) => {
       }
     );
 
+    await axios.post(
+      `${process.env.REALTIME_SERVICE}/api/v1/internal/emit`,
+      {
+        event: "order:update",
+        room: `user:${order.userId}`,
+        payload: {
+          orderId: order._id,
+          status: order.status,
+        },
+      },
+      {
+        headers: {
+          "x-internal-key": process.env.INTERNAL_SERVICE_KEY,
+        },
+      }
+    );
+
     return res.json({
       message: "Order updated Successfully",
     });
   }
 
   if (order.status === "picked_up") {
-    order.status = "delivered";
-
-    await order.save();
-
-    await axios.post(
-      `${process.env.REALTIME_SERVICE}/api/v1/internal/emit`,
-      {
-        event: "order:rider_assigned",
-        room: `restaurant:${order.restaurantId}`,
-        payload: order,
-      },
-      {
-        headers: {
-          "x-internal-key": process.env.INTERNAL_SERVICE_KEY,
-        },
-      }
-    );
-
-    await axios.post(
-      `${process.env.REALTIME_SERVICE}/api/v1/internal/emit`,
-      {
-        event: "order:rider_assigned",
-        room: `user:${order.userId}`,
-        payload: order,
-      },
-      {
-        headers: {
-          "x-internal-key": process.env.INTERNAL_SERVICE_KEY,
-        },
-      }
-    );
-
-    return res.json({
-      message: "Order updated Successfully",
+    return res.status(400).json({
+      message: "Delivery OTP verification is required to complete delivery",
     });
   }
+
+  return res.status(400).json({
+    message: "Invalid order status for update",
+  });
+});
+
+export const verifyDeliveryOtp = TryCatch(async (req, res) => {
+  if (req.headers["x-internal-key"] !== process.env.INTERNAL_SERVICE_KEY) {
+    return res.status(403).json({
+      message: "Forbidden",
+    });
+  }
+
+  const { orderId, riderId, otp } = req.body;
+
+  if (!orderId || !riderId || !otp) {
+    return res.status(400).json({
+      message: "Order ID, rider ID, and OTP are required",
+    });
+  }
+
+  const order = await Order.findById(orderId);
+
+  if (!order) {
+    return res.status(404).json({
+      message: "Order not found",
+    });
+  }
+
+  if (order.riderId !== riderId) {
+    return res.status(403).json({
+      message: "You are not assigned to this order",
+    });
+  }
+
+  if (order.status === "delivered") {
+    return res.status(400).json({
+      message: "Order is already delivered",
+    });
+  }
+
+  if (order.status !== "picked_up") {
+    return res.status(400).json({
+      message: "Order must be picked up before delivery verification",
+    });
+  }
+
+  if (order.deliveryOtp !== otp.toString().trim()) {
+    return res.status(400).json({
+      message: "Invalid delivery OTP",
+    });
+  }
+
+  order.deliveryOtpVerified = true;
+  order.deliveryOtpVerifiedAt = new Date();
+  order.deliveredAt = new Date();
+  order.status = "delivered";
+
+  await order.save();
+
+  await axios.post(
+    `${process.env.REALTIME_SERVICE}/api/v1/internal/emit`,
+    {
+      event: "order:rider_assigned",
+      room: `restaurant:${order.restaurantId}`,
+      payload: order,
+    },
+    {
+      headers: {
+        "x-internal-key": process.env.INTERNAL_SERVICE_KEY,
+      },
+    }
+  );
+
+  await axios.post(
+    `${process.env.REALTIME_SERVICE}/api/v1/internal/emit`,
+    {
+      event: "order:rider_assigned",
+      room: `user:${order.userId}`,
+      payload: order,
+    },
+    {
+      headers: {
+        "x-internal-key": process.env.INTERNAL_SERVICE_KEY,
+      },
+    }
+  );
+
+  await axios.post(
+    `${process.env.REALTIME_SERVICE}/api/v1/internal/emit`,
+    {
+      event: "order:update",
+      room: `user:${order.userId}`,
+      payload: {
+        orderId: order._id,
+        status: order.status,
+      },
+    },
+    {
+      headers: {
+        "x-internal-key": process.env.INTERNAL_SERVICE_KEY,
+      },
+    }
+  );
+
+  const orderResponse = order.toObject();
+  delete (orderResponse as any).deliveryOtp;
+
+  res.json({
+    message: "Delivery verified successfully",
+    order: orderResponse,
+  });
 });

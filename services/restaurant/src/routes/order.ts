@@ -10,6 +10,7 @@ import {
   getMyOrders,
   updateOrderStatus,
   updateOrderStatusRider,
+  verifyDeliveryOtp,
 } from "../controllers/order.js";
 
 const router = express.Router();
@@ -28,5 +29,6 @@ router.put("/:orderId", isAuth, isSeller, updateOrderStatus);
 router.put("/assign/rider", assignRiderToOrder);
 router.get("/current/rider", getCurrentOrderForRider);
 router.put("/update/status/rider", updateOrderStatusRider);
+router.post("/verify-delivery", verifyDeliveryOtp);
 
 export default router;

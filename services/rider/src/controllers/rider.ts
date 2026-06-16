@@ -307,3 +307,60 @@ export const updateOrderStatus = TryCatch(
     }
   }
 );
+
+export const verifyDeliveryOtp = TryCatch(
+  async (req: AuthenticatedRequest, res) => {
+    const userId = req.user?._id;
+
+    if (!userId) {
+      return res.status(401).json({
+        message: "Please Login",
+      });
+    }
+
+    const rider = await Rider.findOne({ userId: userId });
+
+    if (!rider) {
+      return res.status(404).json({
+        message: "Rider profile not found",
+      });
+    }
+
+    const { orderId } = req.params;
+    const { otp } = req.body;
+
+    if (!otp) {
+      return res.status(400).json({
+        message: "Delivery OTP is required",
+      });
+    }
+
+    try {
+      const { data } = await axios.post(
+        `${process.env.RESTAURANT_SERVICE}/api/order/verify-delivery`,
+        {
+          orderId,
+          riderId: rider._id.toString(),
+          otp,
+        },
+        {
+          headers: {
+            "x-internal-key": process.env.INTERNAL_SERVICE_KEY,
+          },
+        }
+      );
+
+      await Rider.findByIdAndUpdate(rider._id, { isAvailble: true });
+
+      res.json({
+        message: data.message || "Delivery verified successfully",
+        order: data.order,
+      });
+    } catch (error: any) {
+      res.status(error.response?.status || 500).json({
+        message: error.response?.data?.message || "Delivery verification failed",
+      });
+    }
+  }
+);
+
