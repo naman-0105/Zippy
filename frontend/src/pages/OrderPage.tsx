@@ -115,6 +115,48 @@ const OrderPage = () => {
         </div>
       </div>
 
+      {order.deliveryOtp && order.status !== "delivered" && order.status !== "cancelled" && (
+        <div className="rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50/80 to-purple-50/50 p-6 shadow-[0_2px_12px_rgba(99,102,241,0.08)]">
+          <div className="text-center space-y-2">
+            <span className="inline-block rounded-full bg-indigo-100 px-3 py-1 text-xs font-bold text-indigo-700">
+              Delivery Verification
+            </span>
+            <h3 className="text-sm font-semibold text-slate-700">
+              Share this OTP with the delivery partner upon arrival
+            </h3>
+            <div className="flex justify-center gap-3 pt-2 pb-1">
+              {order.deliveryOtp.split("").map((digit, i) => (
+                <span
+                  key={i}
+                  className="flex h-12 w-12 items-center justify-center rounded-xl border border-indigo-200 bg-white text-2xl font-black text-indigo-600 shadow-sm"
+                >
+                  {digit}
+                </span>
+              ))}
+            </div>
+            <p className="text-xs text-slate-500">
+              Do not share this OTP until you have received your order.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {order.status === "delivered" && (
+        <div className="flex items-center justify-between rounded-2xl border border-emerald-100 bg-emerald-50/60 p-4 text-emerald-800">
+          <div className="flex items-center gap-3">
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500 text-white font-bold text-sm">
+              ✓
+            </span>
+            <div>
+              <p className="text-sm font-bold">Order Delivered Successfully</p>
+              <p className="text-xs text-emerald-600">
+                Delivery verified with OTP
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="space-y-4 rounded-2xl border border-slate-100 bg-white p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)]">
         <h2 className="text-lg font-bold text-slate-800">Items</h2>
         <div className="space-y-3">

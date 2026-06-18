@@ -115,6 +115,11 @@ export interface IOrder {
   paymentMethod: "razorpay";
   paymentStatus: "pending" | "paid" | "failed";
 
+  deliveryOtp?: string;
+  deliveryOtpVerified?: boolean;
+  deliveryOtpVerifiedAt?: Date | null;
+  deliveredAt?: Date | null;
+
   expiresAt: Date;
 
   createdAt: Date;
