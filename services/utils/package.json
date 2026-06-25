@@ -19,6 +19,7 @@
     "cors": "^2.8.6",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
+    "mongoose": "^9.1.5",
     "razorpay": "^2.9.6"
   },
   "devDependencies": {
@@ -27,6 +28,7 @@
     "@types/cors": "^2.8.19",
     "@types/dotenv": "^8.2.3",
     "@types/express": "^5.0.6",
+    "@types/mongoose": "^5.11.97",
     "concurrently": "^9.2.1",
     "typescript": "^5.9.3"
   }

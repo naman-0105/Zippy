@@ -6,6 +6,7 @@ import {
   verifyRazorpayWebhookSignature,
 } from "../config/verifyRazorpay.js";
 import { publishPaymentSuccess } from "../config/payment.producer.js";
+import PaymentEvent from "../models/PaymentEvent.js";
 
 export const createRazorpayOrder = async (req: Request, res: Response) => {
   try {
@@ -89,6 +90,7 @@ export const razorpayWebhook = async (req: Request, res: Response) => {
       });
     }
 
+    // 1. Verify webhook signature BEFORE processing or recording anything
     const isValid = verifyRazorpayWebhookSignature(
       req.body,
       signature,
@@ -101,30 +103,77 @@ export const razorpayWebhook = async (req: Request, res: Response) => {
       });
     }
 
+    // 2. Extract stable Razorpay event identifier
     const event = req.body.event;
+    const paymentEntity = req.body.payload?.payment?.entity;
+    const orderEntity = req.body.payload?.order?.entity;
 
-    if (event === "payment.captured" || event === "order.paid") {
-      const paymentEntity = req.body.payload?.payment?.entity;
-      const orderEntity = req.body.payload?.order?.entity;
+    const eventId =
+      (req.headers["x-razorpay-event-id"] as string) ||
+      req.body.event_id ||
+      req.body.id ||
+      `${event}:${paymentEntity?.id || orderEntity?.id || Date.now()}`;
 
-      const orderId =
-        paymentEntity?.notes?.orderId ||
-        paymentEntity?.receipt ||
-        orderEntity?.notes?.orderId ||
-        orderEntity?.receipt;
-
-      const paymentId = paymentEntity?.id || orderEntity?.id;
-
-      if (orderId && paymentId) {
-        await publishPaymentSuccess({
-          orderId,
-          paymentId,
-          provider: "razorpay",
-        });
-      }
+    // 3. Check if already processed (Idempotency check)
+    const existingEvent = await PaymentEvent.findOne({ eventId });
+    if (existingEvent) {
+      return res.status(200).json({
+        message: "Webhook already processed",
+      });
     }
 
-    res.json({ status: "ok" });
+    // 4. Atomically record PaymentEvent (protects against concurrent race conditions via unique index)
+    try {
+      await PaymentEvent.create({
+        eventId,
+        eventType: event || "unknown",
+        provider: "razorpay",
+        processedAt: new Date(),
+      });
+    } catch (err: any) {
+      if (err.code === 11000) {
+        return res.status(200).json({
+          message: "Webhook already processed",
+        });
+      }
+      throw err;
+    }
+
+    // 5. Process event business logic (guaranteed to execute only once per event)
+    switch (event) {
+      case "payment.captured":
+      case "order.paid": {
+        const orderId =
+          paymentEntity?.notes?.orderId ||
+          paymentEntity?.receipt ||
+          orderEntity?.notes?.orderId ||
+          orderEntity?.receipt;
+
+        const paymentId = paymentEntity?.id || orderEntity?.id;
+
+        if (orderId && paymentId) {
+          await publishPaymentSuccess({
+            orderId,
+            paymentId,
+            provider: "razorpay",
+          });
+        }
+        break;
+      }
+
+      case "payment.failed": {
+        // Payment failed: order remains unpaid/pending for retry
+        break;
+      }
+
+      default:
+        // Unsupported or unhandled event ignored safely
+        break;
+    }
+
+    res.status(200).json({
+      message: "Webhook processed successfully",
+    });
   } catch (error) {
     res.status(500).json({
       message: "Webhook processing error",
