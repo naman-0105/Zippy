@@ -207,7 +207,7 @@ export const acceptOrder = TryCatch(async (req: AuthenticatedRequest, res) => {
     );
 
     if (data.success) {
-      const riderDetails = await Rider.findOneAndUpdate(
+      await Rider.findOneAndUpdate(
         {
           userId: riderUserId,
           isAvailble: true,
@@ -218,9 +218,12 @@ export const acceptOrder = TryCatch(async (req: AuthenticatedRequest, res) => {
 
       res.json({ message: "Order accepted" });
     }
-  } catch (error) {
-    res.status(400).json({
-      message: "Order already taken",
+  } catch (error: any) {
+    const status = error.response?.status || 400;
+    const message =
+      error.response?.data?.message || "Order already taken or unavailable";
+    res.status(status).json({
+      message,
     });
   }
 });

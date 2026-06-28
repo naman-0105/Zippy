@@ -171,4 +171,15 @@ const OrderSchema = new Schema<IOrder>(
   }
 );
 
+OrderSchema.index(
+  { riderId: 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      riderId: { $type: "string" },
+      status: { $in: ["rider_assigned", "picked_up"] },
+    },
+  }
+);
+
 export default mongoose.model<IOrder>("Order", OrderSchema);

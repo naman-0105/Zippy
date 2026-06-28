@@ -373,68 +373,76 @@ export const assignRiderToOrder = TryCatch(async (req, res) => {
 
   const { orderId, riderId, riderName, riderPhone } = req.body;
 
-  const orderAvailable = await Order.findOne({
+  if (!orderId || !riderId) {
+    return res.status(400).json({
+      message: "Order ID and Rider ID are required",
+    });
+  }
+
+  const existingActiveOrder = await Order.findOne({
     riderId,
-    status: { $ne: "delivered" },
+    status: { $in: ["rider_assigned", "picked_up"] },
   });
 
-  if (orderAvailable) {
-    return res.status(400).json({
-      message: "You already have an order",
+  if (existingActiveOrder) {
+    return res.status(409).json({
+      message: "Rider already has an active order",
     });
   }
 
-  const order = await Order.findById(orderId);
-
-  if (order?.riderId !== null) {
-    return res.status(400).json({
-      message: "Order Already taken",
-    });
+  let orderUpdated;
+  try {
+    orderUpdated = await Order.findOneAndUpdate(
+      { _id: orderId, riderId: null },
+      {
+        riderId,
+        riderName,
+        riderPhone,
+        status: "rider_assigned",
+      },
+      { new: true }
+    );
+  } catch (error: any) {
+    if (error.code === 11000) {
+      return res.status(409).json({
+        message: "Rider already has an active order",
+      });
+    }
+    throw error;
   }
-
-  const orderUpdated = await Order.findOneAndUpdate(
-    { _id: orderId, riderId: null },
-    {
-      riderId,
-      riderName,
-      riderPhone,
-      status: "rider_assigned",
-    },
-    { new: true }
-  );
-
-  await axios.post(
-    `${process.env.REALTIME_SERVICE}/api/v1/internal/emit`,
-    {
-      event: "order:rider_assigned",
-      room: `user:${order.userId}`,
-      payload: order,
-    },
-    {
-      headers: {
-        "x-internal-key": process.env.INTERNAL_SERVICE_KEY,
-      },
-    }
-  );
-  await axios.post(
-    `${process.env.REALTIME_SERVICE}/api/v1/internal/emit`,
-    {
-      event: "order:rider_assigned",
-      room: `restaurant:${order.restaurantId}`,
-      payload: order,
-    },
-    {
-      headers: {
-        "x-internal-key": process.env.INTERNAL_SERVICE_KEY,
-      },
-    }
-  );
 
   if (!orderUpdated) {
     return res.status(400).json({
       message: "Order already taken or not found",
     });
   }
+
+  await axios.post(
+    `${process.env.REALTIME_SERVICE}/api/v1/internal/emit`,
+    {
+      event: "order:rider_assigned",
+      room: `user:${orderUpdated.userId}`,
+      payload: orderUpdated,
+    },
+    {
+      headers: {
+        "x-internal-key": process.env.INTERNAL_SERVICE_KEY,
+      },
+    }
+  );
+  await axios.post(
+    `${process.env.REALTIME_SERVICE}/api/v1/internal/emit`,
+    {
+      event: "order:rider_assigned",
+      room: `restaurant:${orderUpdated.restaurantId}`,
+      payload: orderUpdated,
+    },
+    {
+      headers: {
+        "x-internal-key": process.env.INTERNAL_SERVICE_KEY,
+      },
+    }
+  );
 
   const orderResponse = orderUpdated.toObject();
   delete (orderResponse as any).deliveryOtp;
@@ -463,7 +471,7 @@ export const getCurrentOrderForRider = TryCatch(async (req, res) => {
 
   const order = await Order.findOne({
     riderId,
-    status: { $ne: "delivered" },
+    status: { $in: ["rider_assigned", "picked_up"] },
   })
     .populate("restaurantId")
     .select("-deliveryOtp");
