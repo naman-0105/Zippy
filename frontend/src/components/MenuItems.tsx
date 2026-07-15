@@ -23,11 +23,7 @@ const MenuItems = ({ items, onItemDeleted, isSeller }: MenuItemsProps) => {
     if (!confirm) return;
 
     try {
-      await axios.delete(`${restaurantService}/api/item/${itemId}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
+      await axios.delete(`${restaurantService}/api/item/${itemId}`);
 
       toast.success("Item deleted");
       onItemDeleted();
@@ -41,12 +37,7 @@ const MenuItems = ({ items, onItemDeleted, isSeller }: MenuItemsProps) => {
     try {
       const { data } = await axios.put(
         `${restaurantService}/api/item/status/${itemId}`,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
+        {}
       );
 
       toast.success(data.message);
@@ -68,18 +59,13 @@ const MenuItems = ({ items, onItemDeleted, isSeller }: MenuItemsProps) => {
         {
           restaurantId,
           itemId,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
         }
       );
 
       toast.success(data.message);
       fetchCart();
     } catch (error: any) {
-      toast.error(error.response.data.message);
+      toast.error(error.response?.data?.message || "Failed to add to cart");
     } finally {
       setLoadingItemId(null);
     }

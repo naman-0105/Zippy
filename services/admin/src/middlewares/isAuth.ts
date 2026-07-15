@@ -20,20 +20,15 @@ export const isAuth = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const authHeader = req.headers.authorization;
-
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      res.status(401).json({
-        message: "Please Login - No auth header",
-      });
-      return;
-    }
-
-    const token = authHeader.split(" ")[1];
+    const token =
+      req.cookies?.token ||
+      (req.headers.authorization?.startsWith("Bearer ")
+        ? req.headers.authorization.split(" ")[1]
+        : null);
 
     if (!token) {
       res.status(401).json({
-        message: "Please Login - Token missing",
+        message: "Please Login - No auth token",
       });
       return;
     }
@@ -53,8 +48,8 @@ export const isAuth = async (
     req.user = decodedValue.user;
     next();
   } catch (error) {
-    res.status(500).json({
-      message: "Please Login - Jwt error",
+    res.status(401).json({
+      message: "Please Login - Invalid or expired token",
     });
   }
 };

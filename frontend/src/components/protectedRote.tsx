@@ -1,23 +1,13 @@
-import { Navigate, Outlet, useLocation } from "react-router-dom";
+import { Navigate, Outlet } from "react-router-dom";
 import { useAppData } from "../context/AppContext";
 
 const ProtectedRoute = () => {
-  const { isAuth, user, loading } = useAppData();
-
-  const location = useLocation();
+  const { isAuth, loading } = useAppData();
 
   if (loading) return null;
 
   if (!isAuth) {
-    return <Navigate to={"/login"} replace />;
-  }
-
-  if (user?.role === null && location.pathname !== "/select-role") {
-    return <Navigate to={"/select-role"} replace />;
-  }
-
-  if (user?.role !== null && location.pathname === "/select-role") {
-    return <Navigate to={"/"} replace />;
+    return <Navigate to="/login" replace />;
   }
 
   return <Outlet />;

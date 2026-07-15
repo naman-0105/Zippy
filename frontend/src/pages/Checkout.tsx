@@ -35,12 +35,7 @@ const Checkout = () => {
 
       try {
         const { data } = await axios.get(
-          `${restaurantService}/api/address/all`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
+          `${restaurantService}/api/address/all`
         );
 
         setAddresses(data || []);
@@ -82,11 +77,6 @@ const Checkout = () => {
         {
           paymentMethod: "razorpay",
           addressId: selectedAddressId,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
         }
       );
 

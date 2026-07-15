@@ -13,21 +13,11 @@ const Admin = () => {
   const fetchData = async () => {
     try {
       const { data } = await axios.get(
-        `${adminService}/api/v1/admin/restaurant/pending`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
+        `${adminService}/api/v1/admin/restaurant/pending`
       );
 
       const response = await axios.get(
-        `${adminService}/api/v1/admin/rider/pending`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
+        `${adminService}/api/v1/admin/rider/pending`
       );
 
       setRestaurant(data.restaurants);

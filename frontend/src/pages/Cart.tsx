@@ -35,15 +35,7 @@ const Cart = () => {
   const increaseQty = async (itemId: string) => {
     try {
       setLoadingItemId(itemId);
-      await axios.put(
-        `${restaurantService}/api/cart/inc`,
-        { itemId },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
+      await axios.put(`${restaurantService}/api/cart/inc`, { itemId });
 
       await fetchCart();
     } catch (error) {
@@ -56,15 +48,7 @@ const Cart = () => {
   const decreaseQty = async (itemId: string) => {
     try {
       setLoadingItemId(itemId);
-      await axios.put(
-        `${restaurantService}/api/cart/dec`,
-        { itemId },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
+      await axios.put(`${restaurantService}/api/cart/dec`, { itemId });
 
       await fetchCart();
     } catch (error) {
@@ -79,11 +63,7 @@ const Cart = () => {
     if (!confirm) return;
     try {
       setClearingCart(true);
-      await axios.delete(`${restaurantService}/api/cart/clear`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
+      await axios.delete(`${restaurantService}/api/cart/clear`);
 
       await fetchCart();
     } catch (error) {

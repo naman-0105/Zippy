@@ -23,12 +23,7 @@ const Orders = () => {
   const fetchOrders = async () => {
     try {
       const { data } = await axios.get(
-        `${restaurantService}/api/order/myorder`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
+        `${restaurantService}/api/order/myorder`
       );
 
       setOrders(data.orders || []);

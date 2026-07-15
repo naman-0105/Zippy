@@ -13,12 +13,7 @@ const RiderAdmin = ({
     try {
       await axios.patch(
         `${adminService}/api/v1/verify/rider/${rider._id}`,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
+        {}
       );
       toast.success("Restaurant verified");
       onVerify();

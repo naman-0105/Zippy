@@ -81,11 +81,7 @@ const RiderDashboard = () => {
 
   const fetchProfile = async () => {
     try {
-      const { data } = await axios.get(`${riderService}/api/rider/myprofile`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
+      const { data } = await axios.get(`${riderService}/api/rider/myprofile`);
 
       setProfile(data || null);
     } catch (error) {
@@ -103,12 +99,7 @@ const RiderDashboard = () => {
   const fetchCurrentOrder = async () => {
     try {
       const { data } = await axios.get(
-        `${riderService}/api/rider/order/current`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
+        `${riderService}/api/rider/order/current`
       );
 
       setCurrentOrder(data.order);
@@ -138,11 +129,6 @@ const RiderDashboard = () => {
             isAvailble: !profile?.isAvailble,
             latitude: pos.coords.latitude,
             longitude: pos.coords.longitude,
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
           }
         );
 
@@ -188,12 +174,7 @@ const RiderDashboard = () => {
       try {
         const { data } = await axios.post(
           `${riderService}/api/rider/new`,
-          formData,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
+          formData
         );
 
         toast.success(data.message);

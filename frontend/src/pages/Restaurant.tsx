@@ -18,20 +18,10 @@ const Restaurant = () => {
   const fetchMyRestaurant = async () => {
     try {
       const { data } = await axios.get(
-        `${restaurantService}/api/restaurant/my`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
+        `${restaurantService}/api/restaurant/my`
       );
 
       setRestaurant(data.restaurant || null);
-
-      if (data.token) {
-        localStorage.setItem("token", data.token);
-        window.location.reload();
-      }
     } catch (error) {
       console.log(error);
     } finally {
@@ -48,12 +38,7 @@ const Restaurant = () => {
   const fetchMenuItems = async (restaurantId: string) => {
     try {
       const { data } = await axios.get(
-        `${restaurantService}/api/item/all/${restaurantId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
+        `${restaurantService}/api/item/all/${restaurantId}`
       );
 
       setMenuItems(data);

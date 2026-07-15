@@ -7,13 +7,25 @@ let io: Server;
 export const initSocket = (server: http.Server) => {
   io = new Server(server, {
     cors: {
-      origin: "*",
+      origin: process.env.FRONTEND_URL || "http://localhost:5173",
+      credentials: true,
     },
   });
 
   io.use((socket, next) => {
     try {
-      const token = socket.handshake.auth?.token;
+      let token = socket.handshake.auth?.token;
+      if (!token && socket.handshake.headers.cookie) {
+        const cookies = Object.fromEntries(
+          socket.handshake.headers.cookie
+            .split("; ")
+            .map((c) => {
+              const [key, ...v] = c.split("=");
+              return [key, v.join("=")];
+            })
+        );
+        token = cookies.token;
+      }
 
       if (!token) {
         return next(new Error("Unauthorized"));
@@ -29,7 +41,7 @@ export const initSocket = (server: http.Server) => {
 
       next();
     } catch (error) {
-      console.log("❌ Socket auth failed: ", error);
+      console.log("Socket auth failed: ", error);
       next(new Error("Unauthorized"));
     }
   });

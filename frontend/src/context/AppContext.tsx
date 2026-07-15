@@ -23,22 +23,17 @@ export const AppProvider = ({ children }: AppProviderProps) => {
 
   const [location, setLocation] = useState<LocationData | null>(null);
   const [loadingLocation, setLoadingLocation] = useState(false);
-  const [city, setCity] = useState("Fecthing Location...");
+  const [city, setCity] = useState("Fetching Location...");
 
   async function fetchUser() {
     try {
-      const token = localStorage.getItem("token");
-
-      const { data } = await axios.get(`${authService}/api/auth/me`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
+      const { data } = await axios.get(`${authService}/api/auth/me`);
       setUser(data);
       setIsAuth(true);
-    } catch (error) {
-      console.log(error);
+    } catch {
+      // 401 Unauthorized is expected when user is logged out; handle cleanly
+      setUser(null);
+      setIsAuth(false);
     } finally {
       setLoading(false);
     }
@@ -51,11 +46,7 @@ export const AppProvider = ({ children }: AppProviderProps) => {
   async function fetchCart() {
     if (!user || user.role !== "customer") return;
     try {
-      const { data } = await axios.get(`${restaurantService}/api/cart/all`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
+      const { data } = await axios.get(`${restaurantService}/api/cart/all`);
 
       setCart(data.cart || []);
       setSubTotal(data.subtotal || 0);
@@ -102,13 +93,13 @@ export const AppProvider = ({ children }: AppProviderProps) => {
             "Your Location"
         );
         setLoadingLocation(false);
-      } catch (error) {
+      } catch {
         setLocation({
           latitude,
           longitude,
           formattedAddress: "Current Location",
         });
-        setCity("Faild to load");
+        setCity("Failed to load");
         setLoadingLocation(false);
       }
     });

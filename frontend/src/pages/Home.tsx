@@ -52,9 +52,6 @@ const Home = () => {
             longitude: location.longitude,
             search,
           },
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
         }
       );
 

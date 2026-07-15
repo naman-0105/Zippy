@@ -5,6 +5,16 @@ import { AuthenticatedRequest } from "../middlewares/isAuth.js";
 import { oauth2client } from "../config/googleConfig.js";
 import axios from "axios";
 
+export const getCookieOptions = () => {
+  const isProduction = process.env.NODE_ENV === "production";
+  return {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: isProduction ? ("none" as const) : ("lax" as const),
+    maxAge: 15 * 24 * 60 * 60 * 1000, // 15 days
+  };
+};
+
 export const loginUser = TryCatch(async (req, res) => {
   const { code } = req.body;
 
@@ -34,13 +44,18 @@ export const loginUser = TryCatch(async (req, res) => {
     });
   }
 
-  const token = jwt.sign({ user: { _id: user._id, role: user.role } }, process.env.JWT_SEC as string, {
-    expiresIn: "15d",
-  });
+  const token = jwt.sign(
+    { user: { _id: user._id, role: user.role } },
+    process.env.JWT_SEC as string,
+    {
+      expiresIn: "15d",
+    }
+  );
+
+  res.cookie("token", token, getCookieOptions());
 
   res.status(200).json({
-    message: "Log in successfull",
-    token,
+    message: "Log in successful",
     user,
   });
 });
@@ -51,7 +66,7 @@ type Role = (typeof allowedRoles)[number];
 export const addUserRole = TryCatch(async (req: AuthenticatedRequest, res) => {
   if (!req.user?._id) {
     return res.status(401).json({
-      message: "Unauthorised",
+      message: "Unauthorized",
     });
   }
 
@@ -75,11 +90,24 @@ export const addUserRole = TryCatch(async (req: AuthenticatedRequest, res) => {
     });
   }
 
-  const token = jwt.sign({ user }, process.env.JWT_SEC as string, {
-    expiresIn: "15d",
-  });
+  const token = jwt.sign(
+    { user: { _id: user._id, role: user.role } },
+    process.env.JWT_SEC as string,
+    {
+      expiresIn: "15d",
+    }
+  );
 
-  res.json({ user, token });
+  res.cookie("token", token, getCookieOptions());
+
+  res.json({ message: "Role updated successfully", user });
+});
+
+export const logoutUser = TryCatch(async (req, res) => {
+  res.clearCookie("token", getCookieOptions());
+  res.status(200).json({
+    message: "Logged out successfully",
+  });
 });
 
 export const myProfile = TryCatch(async (req: AuthenticatedRequest, res) => {

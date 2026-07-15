@@ -16,11 +16,7 @@ const OrderPage = () => {
 
   const fetchOrder = async () => {
     try {
-      const { data } = await axios.get(`${restaurantService}/api/order/${id}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
+      const { data } = await axios.get(`${restaurantService}/api/order/${id}`);
 
       setOrder(data);
     } catch (error) {

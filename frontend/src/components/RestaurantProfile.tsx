@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { IRestaurant } from "../types";
 import axios from "axios";
-import { restaurantService } from "../main";
+import { authService, restaurantService } from "../main";
 import toast from "react-hot-toast";
 import { BiEdit, BiMapPin, BiSave } from "react-icons/bi";
 import { useAppData } from "../context/AppContext";
@@ -23,19 +23,14 @@ const RestaurantProfile = ({ restaurant, isSeller, onUpdate }: props) => {
     try {
       const { data } = await axios.put(
         `${restaurantService}/api/restaurant/status`,
-        { status: !isOpen },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
+        { status: !isOpen }
       );
 
       toast.success(data.message);
       setIsOpen(data.restaurant.isOpen);
     } catch (error: any) {
       console.log(error);
-      toast.error(error.response.data.message);
+      toast.error(error.response?.data?.message || "Failed to update status");
     }
   };
 
@@ -44,12 +39,7 @@ const RestaurantProfile = ({ restaurant, isSeller, onUpdate }: props) => {
       setLoading(true);
       const { data } = await axios.put(
         `${restaurantService}/api/restaurant/edit`,
-        { name, description },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
+        { name, description }
       );
 
       toast.success(data.message);
@@ -66,20 +56,19 @@ const RestaurantProfile = ({ restaurant, isSeller, onUpdate }: props) => {
   const { setIsAuth, setUser } = useAppData();
 
   const logoutHandler = async () => {
-    await axios.put(
-      `${restaurantService}/api/restaurant/status`,
-      { status: false },
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      }
-    );
-    localStorage.setItem("token", "");
+    try {
+      await axios.put(`${restaurantService}/api/restaurant/status`, {
+        status: false,
+      });
+      await axios.post(`${authService}/api/auth/logout`);
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
     setIsAuth(false);
     setUser(null);
-    toast.success("loggedOut successfully");
+    toast.success("Logged out successfully");
   };
+
   return (
     <div className="mx-auto max-w-xl rounded-xl bg-white shadow-sm overflow-hidden">
       {restaurant.image && (
@@ -105,7 +94,7 @@ const RestaurantProfile = ({ restaurant, isSeller, onUpdate }: props) => {
             <div className="mt-1 flex items-center gap-2 text-sm text-gray-500">
               <BiMapPin className="h-4 w-4 text-red-500" />
               {restaurant.autoLocation.formattedAddress ||
-                "Location unavalable"}
+                "Location unavailable"}
             </div>
           </div>
 
@@ -168,8 +157,7 @@ const RestaurantProfile = ({ restaurant, isSeller, onUpdate }: props) => {
             {isSeller && (
               <button
                 onClick={logoutHandler}
-                className={`rounded-lg px-4 py-1.5 text-sm font-medium text-white bg-red-600 hover:bg-red-700
-                `}
+                className="rounded-lg px-4 py-1.5 text-sm font-medium text-white bg-red-600 hover:bg-red-700"
               >
                 Logout
               </button>

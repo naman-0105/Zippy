@@ -31,12 +31,7 @@ const RiderOrderRequest = ({ orderId, onAccepted }: Props) => {
     try {
       await axios.post(
         `${riderService}/api/rider/accept/${orderId}`,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
+        {}
       );
 
       toast.success("Order Accepted");

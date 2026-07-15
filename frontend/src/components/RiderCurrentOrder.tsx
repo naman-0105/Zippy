@@ -19,12 +19,7 @@ const RiderCurrentOrder = ({ order, onStatusUpdate }: Props) => {
       setUpdatingStatus(true);
       await axios.put(
         `${riderService}/api/rider/order/update/${order._id}`,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
+        {}
       );
 
       toast.success("Order marked as picked up");
@@ -48,12 +43,7 @@ const RiderCurrentOrder = ({ order, onStatusUpdate }: Props) => {
       setVerifying(true);
       await axios.post(
         `${riderService}/api/rider/order/verify-delivery/${order._id}`,
-        { otp: otp.trim() },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
+        { otp: otp.trim() }
       );
 
       toast.success("Delivery verified successfully 🎉");

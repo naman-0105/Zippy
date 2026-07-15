@@ -6,6 +6,9 @@ import { GoogleOAuthProvider } from "@react-oauth/google";
 import { AppProvider } from "./context/AppContext.tsx";
 import "leaflet/dist/leaflet.css";
 import { SocketProvider } from "./context/SocketContext.tsx";
+import axios from "axios";
+
+axios.defaults.withCredentials = true;
 
 export const authService = import.meta.env.VITE_AUTH_SERVICE;
 export const restaurantService = import.meta.env.VITE_RESTAURANT_SERVICE;

@@ -33,11 +33,7 @@ const AddMenuItem = ({ onItemAdded }: { onItemAdded: () => void }) => {
 
     try {
       setLoading(true);
-      await axios.post(`${restaurantService}/api/item/new`, formData, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
+      await axios.post(`${restaurantService}/api/item/new`, formData);
 
       toast.success("Item added successfully");
       resetForm();

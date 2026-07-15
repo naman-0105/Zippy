@@ -54,12 +54,7 @@ const OrderCard = ({ order, onStatusUpdate }: props) => {
       setRetryVisible(false);
       await axios.put(
         `${restaurantService}/api/order/${order._id}`,
-        { status },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
+        { status }
       );
 
       toast.success("Order updated");

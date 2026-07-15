@@ -30,10 +30,8 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
     if (socketRef.current) return;
 
     const socket = io(realtimeService, {
-      auth: {
-        token: localStorage.getItem("token"),
-      },
-      transports: ["websocket"],
+      withCredentials: true,
+      transports: ["websocket", "polling"],
     });
 
     socketRef.current = socket;

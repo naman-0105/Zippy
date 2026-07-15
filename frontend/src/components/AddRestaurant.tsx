@@ -36,11 +36,7 @@ const AddRestaurant = ({ fetchMyRestaurant }: props) => {
 
     try {
       setSubmitting(true);
-      await axios.post(`${restaurantService}/api/restaurant/new`, formData, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
+      await axios.post(`${restaurantService}/api/restaurant/new`, formData);
 
       toast.success("Restaurant Added successfully");
       fetchMyRestaurant();

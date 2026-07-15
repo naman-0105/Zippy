@@ -13,12 +13,7 @@ const AdminRestaurantCard = ({
     try {
       await axios.patch(
         `${adminService}/api/v1/verify/restaurant/${restaurant._id}`,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
+        {}
       );
       toast.success("Restaurant verified");
       onVerify();

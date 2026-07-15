@@ -1,5 +1,6 @@
 import express from "express";
 import dotenv from "dotenv";
+import cookieParser from "cookie-parser";
 import connectDB from "./config/db.js";
 import cors from "cors";
 import riderRoutes from "./routes/rider.js";
@@ -12,8 +13,15 @@ await connectRabbitMQ();
 startOrderReadyConsumer();
 
 const app = express();
+
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+    credentials: true,
+  })
+);
+app.use(cookieParser());
 app.use(express.json());
-app.use(cors());
 
 app.use("/api/rider", riderRoutes);
 
