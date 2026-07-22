@@ -11,11 +11,15 @@ import {
   updateOrderStatus,
   updateOrderStatusRider,
   verifyDeliveryOtp,
+  getOrderInternalStatus,
+  markOrderDelayed,
 } from "../controllers/order.js";
 
 const router = express.Router();
 
 router.get("/myorder", isAuth, getMyOrders);
+router.get("/internal/status/:orderId", getOrderInternalStatus);
+router.put("/internal/delayed/:orderId", markOrderDelayed);
 router.get("/:id", isAuth, fetchSingleOrder);
 router.post("/new", isAuth, createOrder);
 router.get("/payment/:id", fetchOrderForPayment);

@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { IOrder } from "../types";
 import { useSocket } from "../context/SocketContext";
-import audio from "../assets/notif.mp3";
 import axios from "axios";
 import { restaurantService } from "../main";
 import OrderCard from "./OrderCard";
@@ -24,7 +23,7 @@ const RestaurantOrders = ({ restaurantId }: { restaurantId: string }) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
-    audioRef.current = new Audio(audio);
+    audioRef.current = new Audio("/notif.mp3");
     audioRef.current.load();
   }, []);
 

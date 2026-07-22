@@ -28,10 +28,14 @@ export const AppProvider = ({ children }: AppProviderProps) => {
   async function fetchUser() {
     try {
       const { data } = await axios.get(`${authService}/api/auth/me`);
-      setUser(data);
-      setIsAuth(true);
+      if (data && data._id) {
+        setUser(data);
+        setIsAuth(true);
+      } else {
+        setUser(null);
+        setIsAuth(false);
+      }
     } catch {
-      // 401 Unauthorized is expected when user is logged out; handle cleanly
       setUser(null);
       setIsAuth(false);
     } finally {

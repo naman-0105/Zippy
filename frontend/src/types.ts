@@ -110,7 +110,8 @@ export interface IOrder {
     | "rider_assigned"
     | "picked_up"
     | "delivered"
-    | "cancelled";
+    | "cancelled"
+    | "delayed";
 
   paymentMethod: "razorpay";
   paymentStatus: "pending" | "paid" | "failed";

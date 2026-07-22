@@ -3,6 +3,7 @@ import getBuffer from "../config/datauri.js";
 import { AuthenticatedRequest } from "../middlewares/isAuth.js";
 import TryCatch from "../middlewares/trycatch.js";
 import { Rider } from "../model/Rider.js";
+import { handleRiderRejection } from "../config/orderMatching.consumer.js";
 
 export const addRiderProfile = TryCatch(
   async (req: AuthenticatedRequest, res) => {
@@ -40,7 +41,7 @@ export const addRiderProfile = TryCatch(
       `${process.env.UTILS_SERVICE}/api/upload`,
       {
         buffer: fileBuffer.content,
-      }
+      },
     );
 
     const {
@@ -91,7 +92,7 @@ export const addRiderProfile = TryCatch(
       message: "Rider profile created successfully",
       riderProfile,
     });
-  }
+  },
 );
 
 export const fetchMyProfile = TryCatch(
@@ -107,7 +108,7 @@ export const fetchMyProfile = TryCatch(
     const account = await Rider.findOne({ userId: user._id });
 
     res.json(account);
-  }
+  },
 );
 
 export const toggleRiderAvailablity = TryCatch(
@@ -170,7 +171,7 @@ export const toggleRiderAvailablity = TryCatch(
       message: isAvailble ? "Rider is now online" : "Rider is now offline",
       rider,
     });
-  }
+  },
 );
 
 export const acceptOrder = TryCatch(async (req: AuthenticatedRequest, res) => {
@@ -203,7 +204,7 @@ export const acceptOrder = TryCatch(async (req: AuthenticatedRequest, res) => {
         headers: {
           "x-internal-key": process.env.INTERNAL_SERVICE_KEY,
         },
-      }
+      },
     );
 
     if (data.success) {
@@ -213,7 +214,7 @@ export const acceptOrder = TryCatch(async (req: AuthenticatedRequest, res) => {
           isAvailble: true,
         },
         { isAvailble: false },
-        { new: true }
+        { new: true },
       );
 
       res.json({ message: "Order accepted" });
@@ -233,39 +234,47 @@ export const fetchMyCurrentOrder = TryCatch(
     const riderUserId = req.user?._id;
 
     if (!riderUserId) {
-      return res.status(400).json({
+      return res.status(401).json({
         message: "Please Login",
       });
     }
 
     const rider = await Rider.findOne({
       userId: riderUserId,
-      isVerified: true,
     });
 
     if (!rider) {
-      return res.status(404).json({ message: "rider not found" });
+      return res.status(404).json({ message: "Rider profile not found" });
     }
+
+    const restaurantServiceUrl =
+      process.env.RESTAURANT_SERVICE ||
+      process.env.VITE_RESTAURANT_SERVICE ||
+      "http://localhost:5001";
 
     try {
       const { data } = await axios.get(
-        `${process.env.RESTAURANT_SERVICE}/api/order/current/rider?riderId=${rider._id}`,
+        `${restaurantServiceUrl}/api/order/current/rider?riderId=${rider._id}`,
         {
           headers: {
             "x-internal-key": process.env.INTERNAL_SERVICE_KEY,
           },
-        }
+          timeout: 5000,
+        },
       );
 
       res.json({
-        order: data,
+        order: data || null,
       });
     } catch (error: any) {
+      if (error.response?.status === 404) {
+        return res.json({ order: null });
+      }
       res.status(500).json({
-        message: error.response.data.message,
+        message: error.response?.data?.message || "Failed to fetch current order",
       });
     }
-  }
+  },
 );
 
 export const updateOrderStatus = TryCatch(
@@ -296,7 +305,7 @@ export const updateOrderStatus = TryCatch(
           headers: {
             "x-internal-key": process.env.INTERNAL_SERVICE_KEY,
           },
-        }
+        },
       );
 
       res.json({
@@ -308,7 +317,7 @@ export const updateOrderStatus = TryCatch(
         message: error.response.data.message,
       });
     }
-  }
+  },
 );
 
 export const verifyDeliveryOtp = TryCatch(
@@ -350,7 +359,7 @@ export const verifyDeliveryOtp = TryCatch(
           headers: {
             "x-internal-key": process.env.INTERNAL_SERVICE_KEY,
           },
-        }
+        },
       );
 
       await Rider.findByIdAndUpdate(rider._id, { isAvailble: true });
@@ -361,9 +370,41 @@ export const verifyDeliveryOtp = TryCatch(
       });
     } catch (error: any) {
       res.status(error.response?.status || 500).json({
-        message: error.response?.data?.message || "Delivery verification failed",
+        message:
+          error.response?.data?.message || "Delivery verification failed",
       });
     }
-  }
+  },
 );
 
+export const rejectOrder = TryCatch(async (req: AuthenticatedRequest, res) => {
+  const userId = req.user?._id;
+
+  if (!userId) {
+    return res.status(401).json({
+      message: "Please Login",
+    });
+  }
+
+  const rider = await Rider.findOne({ userId });
+
+  if (!rider) {
+    return res.status(404).json({
+      message: "Rider profile not found",
+    });
+  }
+
+  const { orderId } = req.params;
+
+  if (!orderId || typeof orderId !== "string") {
+    return res.status(400).json({
+      message: "Order ID is required",
+    });
+  }
+
+  handleRiderRejection(orderId, rider._id.toString());
+
+  res.json({
+    message: "Order offer rejected",
+  });
+});

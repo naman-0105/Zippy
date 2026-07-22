@@ -6,7 +6,6 @@ import { riderService } from "../main";
 import toast from "react-hot-toast";
 import { BiUpload } from "react-icons/bi";
 import type { IOrder } from "../types";
-import audio from "../assets/notif.mp3";
 import RiderOrderRequest from "../components/RiderOrderRequest";
 import RiderCurrentOrder from "../components/RiderCurrentOrder";
 import RiderOrderMap from "../components/RiderOrderMap";
@@ -37,7 +36,7 @@ const RiderDashboard = () => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
-    audioRef.current = new Audio(audio);
+    audioRef.current = new Audio("/notif.mp3");
     audioRef.current.preload = "auto";
   }, []);
 
@@ -69,7 +68,7 @@ const RiderDashboard = () => {
 
       setTimeout(() => {
         setIncomingOrders((prev) => prev.filter((id) => id !== orderId));
-      }, 10000);
+      }, 30000);
     };
 
     socket.on("order:available", onOrderAvailable);

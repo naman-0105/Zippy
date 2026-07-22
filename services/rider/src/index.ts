@@ -5,7 +5,7 @@ import connectDB from "./config/db.js";
 import cors from "cors";
 import riderRoutes from "./routes/rider.js";
 import { connectRabbitMQ } from "./config/rabbitmq.js";
-import { startOrderReadyConsumer } from "./config/orderReady.consumer.js";
+import { startOrderReadyConsumer } from "./config/orderMatching.consumer.js";
 
 dotenv.config();
 
@@ -18,7 +18,7 @@ app.use(
   cors({
     origin: process.env.FRONTEND_URL || "http://localhost:5173",
     credentials: true,
-  })
+  }),
 );
 app.use(cookieParser());
 app.use(express.json());

@@ -12,8 +12,13 @@ export const createRazorpayOrder = async (req: Request, res: Response) => {
   try {
     const { orderId } = req.body;
 
+    const restaurantServiceUrl =
+      process.env.RESTAURANT_SERVICE ||
+      process.env.VITE_RESTAURANT_SERVICE ||
+      "http://localhost:5001";
+
     const { data } = await axios.get(
-      `${process.env.RESTAURANT_SERVICE}/api/order/payment/${orderId}`,
+      `${restaurantServiceUrl}/api/order/payment/${orderId}`,
       {
         headers: {
           "x-internal-key": process.env.INTERNAL_SERVICE_KEY,
@@ -34,7 +39,8 @@ export const createRazorpayOrder = async (req: Request, res: Response) => {
       razorpayOrderId: razorpayOrder.id,
       key: process.env.RAZORPAY_KEY_ID,
     });
-  } catch (error) {
+  } catch (error: any) {
+    console.error("Failed to create Razorpay order:", error?.response?.data || error.message);
     res.status(500).json({
       message: "Failed to create Razorpay order",
     });

@@ -24,6 +24,8 @@ const statusColor = (status: string) => {
       return "bg-purple-100 text-purple-700";
     case "delivered":
       return "bg-green-100 text-green-700";
+    case "delayed":
+      return "bg-amber-100 text-amber-700";
     default:
       return "bg-gray-100 text-gray-700";
   }

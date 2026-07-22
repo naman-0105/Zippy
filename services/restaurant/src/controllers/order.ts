@@ -417,6 +417,18 @@ export const assignRiderToOrder = TryCatch(async (req, res) => {
     });
   }
 
+  console.log(
+    "Publishing ORDER_ASSIGNED_TO_RIDER event for order",
+    orderUpdated._id
+  );
+
+  await publishEvent("ORDER_ASSIGNED_TO_RIDER", {
+    orderId: orderUpdated._id.toString(),
+    riderId: orderUpdated.riderId,
+    userId: orderUpdated.userId,
+    restaurantId: orderUpdated.restaurantId,
+  });
+
   await axios.post(
     `${process.env.REALTIME_SERVICE}/api/v1/internal/emit`,
     {
@@ -476,13 +488,7 @@ export const getCurrentOrderForRider = TryCatch(async (req, res) => {
     .populate("restaurantId")
     .select("-deliveryOtp");
 
-  if (!order) {
-    return res.status(404).json({
-      message: "Order not found",
-    });
-  }
-
-  res.json(order);
+  res.json(order || null);
 });
 
 export const updateOrderStatusRider = TryCatch(async (req, res) => {
@@ -675,3 +681,116 @@ export const verifyDeliveryOtp = TryCatch(async (req, res) => {
     order: orderResponse,
   });
 });
+
+export const getOrderInternalStatus = TryCatch(async (req, res) => {
+  if (req.headers["x-internal-key"] !== process.env.INTERNAL_SERVICE_KEY) {
+    return res.status(403).json({
+      message: "Forbidden",
+    });
+  }
+
+  const { orderId } = req.params;
+
+  if (!orderId || typeof orderId !== "string") {
+    return res.status(400).json({
+      message: "Order ID is required",
+    });
+  }
+
+  const order = await Order.findById(orderId);
+
+  if (!order) {
+    return res.status(404).json({
+      message: "Order not found",
+    });
+  }
+
+  res.json({
+    orderId: order._id.toString(),
+    isAssigned: Boolean(order.riderId),
+    riderId: order.riderId,
+    userId: order.userId,
+    restaurantId: order.restaurantId,
+    status: order.status,
+  });
+});
+
+export const markOrderDelayed = TryCatch(async (req, res) => {
+  if (req.headers["x-internal-key"] !== process.env.INTERNAL_SERVICE_KEY) {
+    return res.status(403).json({
+      message: "Forbidden",
+    });
+  }
+
+  const { orderId } = req.params;
+
+  if (!orderId || typeof orderId !== "string") {
+    return res.status(400).json({
+      message: "Order ID is required",
+    });
+  }
+
+  const order = await Order.findById(orderId);
+
+  if (!order) {
+    return res.status(404).json({
+      message: "Order not found",
+    });
+  }
+
+  if (order.riderId) {
+    return res.status(400).json({
+      message: "Order already assigned to rider",
+    });
+  }
+
+  order.status = "delayed";
+  await order.save();
+
+  const realtimeUrl =
+    process.env.REALTIME_SERVICE ||
+    process.env.VITE_REALTIME_SERVICE ||
+    "http://localhost:5004";
+
+  await axios.post(
+    `${realtimeUrl}/api/v1/internal/emit`,
+    {
+      event: "order:update",
+      room: `user:${order.userId}`,
+      payload: {
+        orderId: order._id,
+        status: "delayed",
+        message:
+          "Delivery is taking longer than expected. We are currently searching for nearby riders.",
+      },
+    },
+    {
+      headers: {
+        "x-internal-key": process.env.INTERNAL_SERVICE_KEY,
+      },
+    }
+  );
+
+  await axios.post(
+    `${realtimeUrl}/api/v1/internal/emit`,
+    {
+      event: "order:update",
+      room: `restaurant:${order.restaurantId}`,
+      payload: {
+        orderId: order._id,
+        status: "delayed",
+      },
+    },
+    {
+      headers: {
+        "x-internal-key": process.env.INTERNAL_SERVICE_KEY,
+      },
+    }
+  );
+
+  res.json({
+    message: "Order marked as delayed and customer notified",
+    order,
+  });
+});
+

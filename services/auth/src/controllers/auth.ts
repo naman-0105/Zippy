@@ -110,7 +110,36 @@ export const logoutUser = TryCatch(async (req, res) => {
   });
 });
 
-export const myProfile = TryCatch(async (req: AuthenticatedRequest, res) => {
-  const user = req.user;
-  res.json(user);
+export const myProfile = TryCatch(async (req, res) => {
+  const token =
+    req.cookies?.token ||
+    (req.headers.authorization?.startsWith("Bearer ")
+      ? req.headers.authorization.split(" ")[1]
+      : null);
+
+  if (!token) {
+    return res.status(200).json(null);
+  }
+
+  if (!process.env.JWT_SEC) {
+    return res.status(500).json({
+      message: "Server configuration error",
+    });
+  }
+
+  try {
+    const decodedValue = jwt.verify(
+      token,
+      process.env.JWT_SEC
+    ) as jwt.JwtPayload;
+
+    if (!decodedValue || !decodedValue.user) {
+      return res.status(200).json(null);
+    }
+
+    const user = await User.findById(decodedValue.user._id);
+    return res.status(200).json(user || null);
+  } catch {
+    return res.status(200).json(null);
+  }
 });

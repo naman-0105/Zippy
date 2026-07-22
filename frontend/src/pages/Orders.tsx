@@ -12,6 +12,7 @@ const ACTIVE_STATUSES = [
   "ready_for_rider",
   "rider_assigned",
   "picked_up",
+  "delayed",
 ];
 
 const Orders = () => {

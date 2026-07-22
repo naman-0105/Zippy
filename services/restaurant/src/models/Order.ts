@@ -39,7 +39,8 @@ export interface IOrder extends Document {
     | "rider_assigned"
     | "picked_up"
     | "delivered"
-    | "cancelled";
+    | "cancelled"
+    | "delayed";
 
   paymentMethod: "razorpay";
   paymentStatus: "pending" | "paid" | "failed";
@@ -127,6 +128,7 @@ const OrderSchema = new Schema<IOrder>(
         "picked_up",
         "delivered",
         "cancelled",
+        "delayed",
       ],
       default: "placed",
     },

@@ -8,6 +8,6 @@ router.post("/login", loginUser);
 router.post("/logout", logoutUser);
 router.get("/logout", logoutUser);
 router.put("/add/role", isAuth, addUserRole);
-router.get("/me", isAuth, myProfile);
+router.get("/me", myProfile);
 
 export default router;
