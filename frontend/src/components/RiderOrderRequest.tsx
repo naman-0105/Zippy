@@ -6,19 +6,21 @@ import toast from "react-hot-toast";
 interface Props {
   orderId: string;
   onAccepted: () => void;
+  onDeclined: () => void;
 }
 
-const RiderOrderRequest = ({ orderId, onAccepted }: Props) => {
+const RiderOrderRequest = ({ orderId, onAccepted, onDeclined }: Props) => {
   const [accepting, setAccepting] = useState(false);
   const [rejecting, setRejecting] = useState(false);
-  const [secondsLeft, setSecondsLeft] = useState(30);
+  const [secondsLeft, setSecondsLeft] = useState(20);
+
 
   useEffect(() => {
     const interval = setInterval(() => {
       setSecondsLeft((prev) => {
         if (prev <= 1) {
           clearInterval(interval);
-          onAccepted();
+          onDeclined();
           return 0;
         }
         return prev - 1;
@@ -26,7 +28,7 @@ const RiderOrderRequest = ({ orderId, onAccepted }: Props) => {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [onAccepted]);
+  }, [onDeclined]);
 
   const acceptOrder = async () => {
     try {
@@ -40,7 +42,7 @@ const RiderOrderRequest = ({ orderId, onAccepted }: Props) => {
       onAccepted();
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Failed to accept order");
-      onAccepted();
+      onDeclined();
     } finally {
       setAccepting(false);
     }
@@ -55,9 +57,9 @@ const RiderOrderRequest = ({ orderId, onAccepted }: Props) => {
       );
 
       toast("Order offer declined");
-      onAccepted();
-    } catch (error: any) {
-      onAccepted();
+      onDeclined();
+    } catch {
+      onDeclined();
     } finally {
       setRejecting(false);
     }
@@ -99,3 +101,4 @@ const RiderOrderRequest = ({ orderId, onAccepted }: Props) => {
 };
 
 export default RiderOrderRequest;
+

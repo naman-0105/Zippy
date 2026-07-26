@@ -7,6 +7,7 @@ import {
   fetchMyCurrentOrder,
   fetchMyProfile,
   toggleRiderAvailablity,
+  updateRiderLocation,
   updateOrderStatus,
   verifyDeliveryOtp,
 } from "../controllers/rider.js";
@@ -18,6 +19,8 @@ router.post("/new", isAuth, uploadFile, addRiderProfile);
 
 router.get("/myprofile", isAuth, fetchMyProfile);
 router.patch("/toggle", isAuth, toggleRiderAvailablity);
+router.patch("/location", isAuth, updateRiderLocation);
+
 router.post("/accept/:orderId", isAuth, acceptOrder);
 router.post("/reject/:orderId", isAuth, rejectOrder);
 router.get("/order/current", isAuth, fetchMyCurrentOrder);

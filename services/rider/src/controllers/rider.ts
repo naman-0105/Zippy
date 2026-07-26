@@ -3,7 +3,13 @@ import getBuffer from "../config/datauri.js";
 import { AuthenticatedRequest } from "../middlewares/isAuth.js";
 import TryCatch from "../middlewares/trycatch.js";
 import { Rider } from "../model/Rider.js";
-import { handleRiderRejection } from "../config/orderMatching.consumer.js";
+import {
+  handleRiderAcceptance,
+  handleRiderRejection,
+  isOfferValidForRider,
+} from "../config/orderMatching.consumer.js";
+
+
 
 export const addRiderProfile = TryCatch(
   async (req: AuthenticatedRequest, res) => {
@@ -174,6 +180,58 @@ export const toggleRiderAvailablity = TryCatch(
   },
 );
 
+export const updateRiderLocation = TryCatch(
+  async (req: AuthenticatedRequest, res) => {
+    const user = req.user;
+
+    if (!user) {
+      return res.status(401).json({
+        message: "Unauthorized",
+      });
+    }
+
+    if (user.role !== "rider") {
+      return res.status(403).json({
+        message: "Only riders can update location",
+      });
+    }
+
+    const { latitude, longitude } = req.body;
+
+    if (latitude === undefined || longitude === undefined) {
+      return res.status(400).json({
+        message: "Latitude and longitude are required",
+      });
+    }
+
+    const rider = await Rider.findOneAndUpdate(
+      { userId: user._id },
+      {
+        $set: {
+          location: {
+            type: "Point",
+            coordinates: [Number(longitude), Number(latitude)],
+          },
+          lastActiveAt: new Date(),
+        },
+      },
+      { new: true },
+    );
+
+    if (!rider) {
+      return res.status(404).json({
+        message: "Rider profile not found",
+      });
+    }
+
+    return res.status(200).json({
+      message: "Location updated successfully",
+      location: rider.location,
+    });
+  },
+);
+
+
 export const acceptOrder = TryCatch(async (req: AuthenticatedRequest, res) => {
   const riderUserId = req.user?._id;
   const { orderId } = req.params;
@@ -184,10 +242,25 @@ export const acceptOrder = TryCatch(async (req: AuthenticatedRequest, res) => {
     });
   }
 
+  if (!orderId || typeof orderId !== "string") {
+    return res.status(400).json({
+      message: "Order ID is required",
+    });
+  }
+
+
   const rider = await Rider.findOne({ userId: riderUserId, isAvailble: true });
 
   if (!rider) {
     return res.status(404).json({ message: "rider not found" });
+  }
+
+  const riderId = rider._id.toString();
+
+  if (!isOfferValidForRider(orderId, riderId)) {
+    return res.status(400).json({
+      message: "This delivery offer is no longer available or was declined",
+    });
   }
 
   try {
@@ -195,11 +268,12 @@ export const acceptOrder = TryCatch(async (req: AuthenticatedRequest, res) => {
       `${process.env.RESTAURANT_SERVICE}/api/order/assign/rider`,
       {
         orderId,
-        riderId: rider._id.toString(),
+        riderId,
         riderUserId: rider.userId,
         riderName: rider.picture,
         riderPhone: rider.phoneNumber,
       },
+
       {
         headers: {
           "x-internal-key": process.env.INTERNAL_SERVICE_KEY,
@@ -217,7 +291,9 @@ export const acceptOrder = TryCatch(async (req: AuthenticatedRequest, res) => {
         { new: true },
       );
 
-      res.json({ message: "Order accepted" });
+      handleRiderAcceptance(orderId, riderId);
+
+      return res.json({ message: "Order accepted" });
     }
   } catch (error: any) {
     const status = error.response?.status || 400;

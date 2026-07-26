@@ -11,6 +11,12 @@ export const connectRabbitMQ = async () => {
     durable: true,
   });
 
+  if (process.env.ORDER_READY_QUEUE) {
+    await channel.assertQueue(process.env.ORDER_READY_QUEUE, {
+      durable: true,
+    });
+  }
+
   console.log("Connected To Rabbitmq(restaurant service)");
 };
 

@@ -300,6 +300,24 @@ export const updateOrderStatus = TryCatch(
       }
     );
 
+    await axios.post(
+      `${process.env.REALTIME_SERVICE}/api/v1/internal/emit`,
+      {
+        event: "order:update",
+        room: `restaurant:${order.restaurantId}`,
+        payload: {
+          orderId: order._id,
+          status: order.status,
+        },
+      },
+      {
+        headers: {
+          "x-internal-key": process.env.INTERNAL_SERVICE_KEY,
+        },
+      }
+    );
+
+
     // now assign riders
     if (status === "ready_for_rider") {
       console.log(

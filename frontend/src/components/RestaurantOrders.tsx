@@ -62,10 +62,15 @@ const RestaurantOrders = ({ restaurantId }: { restaurantId: string }) => {
   }, [restaurantId]);
 
   useEffect(() => {
+    if (!socket || !restaurantId) return;
+    socket.emit("join:restaurant", restaurantId);
+  }, [socket, restaurantId]);
+
+  useEffect(() => {
     if (!socket) return;
 
     const onNewOrder = () => {
-      console.log("New Order recived socket");
+      console.log("New Order received socket");
 
       if (audioUnlocked && audioRef.current) {
         audioRef.current.currentTime = 0;
@@ -77,26 +82,22 @@ const RestaurantOrders = ({ restaurantId }: { restaurantId: string }) => {
       fetchOrders();
     };
 
-    socket.on("order:new", onNewOrder);
-
-    return () => {
-      socket.off("order:new", onNewOrder);
-    };
-  }, [socket, audioUnlocked]);
-
-  useEffect(() => {
-    if (!socket) return;
-
     const onUpdateOrder = () => {
+      console.log("Order updated via socket event");
       fetchOrders();
     };
 
+    socket.on("order:new", onNewOrder);
+    socket.on("order:update", onUpdateOrder);
     socket.on("order:rider_assigned", onUpdateOrder);
 
     return () => {
+      socket.off("order:new", onNewOrder);
+      socket.off("order:update", onUpdateOrder);
       socket.off("order:rider_assigned", onUpdateOrder);
     };
-  }, [socket]);
+  }, [socket, audioUnlocked]);
+
 
   if (loading) {
     return <p className="text-gray-500">Loading Orders</p>;

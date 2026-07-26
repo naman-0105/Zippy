@@ -18,6 +18,10 @@ interface IRider {
   picture: string;
   isVerified: boolean;
   isAvailble: boolean;
+  location?: {
+    type: "Point";
+    coordinates: [number, number];
+  };
 }
 
 const RiderDashboard = () => {
@@ -48,10 +52,50 @@ const RiderDashboard = () => {
       audioRef.current.currentTime = 0;
       setAudioUnlocked(true);
       toast.success("Sound Enabled");
-    } catch (error) {
+    } catch {
       toast.error("Tap again to enable sound");
     }
   };
+
+  // Continuous live location tracking while Online to keep backend GPS updated
+  useEffect(() => {
+    if (!profile?.isAvailble) return;
+    if (!navigator.geolocation) return;
+
+    let lastSentTime = 0;
+
+    const watchId = navigator.geolocation.watchPosition(
+      async (pos) => {
+        const { latitude, longitude } = pos.coords;
+
+        // Update backend with live coordinates (throttled to max once every 3s)
+        const now = Date.now();
+        if (now - lastSentTime >= 3000) {
+          lastSentTime = now;
+          try {
+            await axios.patch(`${riderService}/api/rider/location`, {
+              latitude,
+              longitude,
+            });
+          } catch (err) {
+            console.error("Failed to update rider location in backend:", err);
+          }
+        }
+      },
+      (err) => {
+        console.error("Error watching rider location:", err);
+      },
+      {
+        enableHighAccuracy: true,
+        maximumAge: 5000,
+        timeout: 20000,
+      }
+    );
+
+    return () => {
+      navigator.geolocation.clearWatch(watchId);
+    };
+  }, [profile?.isAvailble]);
 
   useEffect(() => {
     if (!socket) return;
@@ -68,7 +112,7 @@ const RiderDashboard = () => {
 
       setTimeout(() => {
         setIncomingOrders((prev) => prev.filter((id) => id !== orderId));
-      }, 30000);
+      }, 20000);
     };
 
     socket.on("order:available", onOrderAvailable);
@@ -83,7 +127,7 @@ const RiderDashboard = () => {
       const { data } = await axios.get(`${riderService}/api/rider/myprofile`);
 
       setProfile(data || null);
-    } catch (error) {
+    } catch {
       setProfile(null);
     } finally {
       setLoading(false);
@@ -120,27 +164,33 @@ const RiderDashboard = () => {
 
     setToggling(true);
 
-    navigator.geolocation.getCurrentPosition(async (pos) => {
-      try {
-        await axios.patch(
-          `${riderService}/api/rider/toggle`,
-          {
-            isAvailble: !profile?.isAvailble,
-            latitude: pos.coords.latitude,
-            longitude: pos.coords.longitude,
-          }
-        );
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const { latitude, longitude } = pos.coords;
 
-        toast.success(
-          profile?.isAvailble ? "You are offline" : "You are online"
-        );
-        fetchProfile();
-      } catch (error: any) {
-        toast.error(error.response.data.message);
-      } finally {
+        try {
+          await axios.patch(`${riderService}/api/rider/toggle`, {
+            isAvailble: !profile?.isAvailble,
+            latitude,
+            longitude,
+          });
+
+          toast.success(
+            profile?.isAvailble ? "You are offline" : "You are online"
+          );
+          fetchProfile();
+        } catch (error: any) {
+          toast.error(error.response?.data?.message || "Failed to toggle status");
+        } finally {
+          setToggling(false);
+        }
+      },
+      () => {
         setToggling(false);
-      }
-    });
+        toast.error("Location access is required to go online");
+      },
+      { enableHighAccuracy: true, timeout: 15000 }
+    );
   };
 
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -157,33 +207,40 @@ const RiderDashboard = () => {
 
     setSubmitting(true);
 
-    navigator.geolocation.getCurrentPosition(async (pos) => {
-      const formData = new FormData();
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const formData = new FormData();
 
-      formData.append("phoneNumber", phoneNumber);
-      formData.append("aadharNumber", aadharNumber);
-      formData.append("drivingLicenseNumber", drivingLicenseNumber);
-      formData.append("latitude", pos.coords.latitude.toString());
-      formData.append("longitude", pos.coords.longitude.toString());
+        formData.append("phoneNumber", phoneNumber);
+        formData.append("aadharNumber", aadharNumber);
+        formData.append("drivingLicenseNumber", drivingLicenseNumber);
+        formData.append("latitude", pos.coords.latitude.toString());
+        formData.append("longitude", pos.coords.longitude.toString());
 
-      if (image) {
-        formData.append("file", image);
-      }
+        if (image) {
+          formData.append("file", image);
+        }
 
-      try {
-        const { data } = await axios.post(
-          `${riderService}/api/rider/new`,
-          formData
-        );
+        try {
+          const { data } = await axios.post(
+            `${riderService}/api/rider/new`,
+            formData
+          );
 
-        toast.success(data.message);
-        fetchProfile();
-      } catch (error: any) {
-        toast.error(error.response.data.message);
-      } finally {
+          toast.success(data.message);
+          fetchProfile();
+        } catch (error: any) {
+          toast.error(error.response?.data?.message || "Failed to create profile");
+        } finally {
+          setSubmitting(false);
+        }
+      },
+      () => {
         setSubmitting(false);
-      }
-    });
+        toast.error("Location permission required to register profile");
+      },
+      { enableHighAccuracy: true, timeout: 15000 }
+    );
   };
 
   if (user?.role !== "rider") {
@@ -266,6 +323,7 @@ const RiderDashboard = () => {
   return (
     <div className="mx-auto max-w-md space-y-6 px-4 py-8 sm:max-w-xl sm:px-6 lg:px-8">
       
+      {/* Profile Card */}
       <div className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-[0_2px_12px_rgba(0,0,0,0.03)]">
         <div className="relative h-24 bg-gradient-to-r from-indigo-500 to-violet-500 sm:h-32"></div>
         <div className="relative px-6 pb-6 pt-0 text-center sm:px-8 sm:pb-8">
@@ -347,8 +405,12 @@ const RiderDashboard = () => {
                 key={id}
                 orderId={id}
                 onAccepted={() => {
+                  setIncomingOrders((prev) => prev.filter((orderId) => orderId !== id));
                   fetchProfile();
                   fetchCurrentOrder();
+                }}
+                onDeclined={() => {
+                  setIncomingOrders((prev) => prev.filter((orderId) => orderId !== id));
                 }}
               />
             ))}

@@ -2,14 +2,13 @@ import axios from "axios";
 import { getChannel } from "./rabbitmq.js";
 import { Rider } from "../model/Rider.js";
 
-const OFFER_TIMEOUT_MS = 30000;
-const MAX_ROUNDS_PER_RADIUS = 3;
-const INITIAL_RADIUS_METERS = 5000;
-const EXPANDED_RADIUS_METERS = 10000;
+const OFFER_TIMEOUT_MS = 20000; // 20 seconds per rider
+const MAX_RADIUS_METERS = 5000; // Strictly 5 km radius limit
 
 interface ActiveMatchingSession {
   orderId: string;
   currentRiderId: string | null;
+  rejectedRiders: Set<string>;
   resolveWait?: ((result: "accepted" | "rejected" | "timeout") => void) | undefined;
   isAssigned?: boolean;
 }
@@ -25,7 +24,7 @@ export const handleRiderAcceptance = (
     session.isAssigned = true;
     if (session.resolveWait) {
       console.log(
-        `[Matching] successful assignment: Acceptance event received for order ${orderId}${
+        `[Matching] Acceptance received for order ${orderId}${
           riderId ? ` (rider: ${riderId})` : ""
         }`
       );
@@ -41,14 +40,31 @@ export const handleRiderRejection = (
   riderId: string
 ): boolean => {
   const session = activeSessions.get(orderId);
-  if (session && session.currentRiderId === riderId && session.resolveWait) {
-    console.log(
-      `[Matching] rider rejected: Early rejection received for order ${orderId} from rider ${riderId}`
-    );
-    session.resolveWait("rejected");
-    return true;
+  if (session) {
+    session.rejectedRiders.add(riderId);
+    if (session.currentRiderId === riderId) {
+      session.currentRiderId = null;
+      if (session.resolveWait) {
+        console.log(
+          `[Matching] Early rejection received for order ${orderId} from rider ${riderId}`
+        );
+        session.resolveWait("rejected");
+        return true;
+      }
+    }
   }
   return false;
+};
+
+export const isOfferValidForRider = (
+  orderId: string,
+  riderId: string
+): boolean => {
+  const session = activeSessions.get(orderId);
+  if (!session) return false;
+  if (session.isAssigned) return false;
+  if (session.rejectedRiders && session.rejectedRiders.has(riderId)) return false;
+  return session.currentRiderId === riderId;
 };
 
 const getRestaurantServiceUrl = () =>
@@ -74,7 +90,7 @@ const markOrderAsDelayed = async (orderId: string) => {
       }
     );
     console.log(
-      `[Matching] final delayed state: Order ${orderId} marked as delayed in restaurant service`
+      `[Matching] Order ${orderId} marked as delayed (no eligible rider accepted within 5 km)`
     );
   } catch (error: any) {
     console.error(
@@ -89,8 +105,10 @@ const sendOfferToRider = async (
   orderId: string,
   restaurantId: string
 ) => {
-  await axios.post(
-    `${getRealtimeServiceUrl()}/api/v1/internal/emit`,
+  const url = `${getRealtimeServiceUrl()}/api/v1/internal/emit`;
+  console.log(`[Matching] Sending offer notification for order ${orderId} to rider user:${userId} via ${url}`);
+  const response = await axios.post(
+    url,
     {
       event: "order:available",
       room: `user:${userId}`,
@@ -103,7 +121,9 @@ const sendOfferToRider = async (
       timeout: 5000,
     }
   );
+  console.log(`[Matching] Realtime emit response: ${response.status} ${response.data?.sucess ? "SUCCESS" : ""}`);
 };
+
 
 const waitForRiderResponse = (
   orderId: string,
@@ -173,44 +193,36 @@ export const processSequentialRiderMatching = async (data: {
   const session: ActiveMatchingSession = {
     orderId,
     currentRiderId: null,
+    rejectedRiders: new Set<string>(),
     isAssigned: false,
   };
   activeSessions.set(orderId, session);
 
   console.log(`\n======================================================`);
-  console.log(`[Matching] matching started for order ${orderId}`);
+  console.log(`[Matching] Matching started for order ${orderId}`);
   console.log(
     `[Matching] Restaurant location coordinates: [${restaurantCoords[0]}, ${restaurantCoords[1]}]`
   );
+  console.log(`[Matching] Search radius: 5 km (Strict limit)`);
   console.log(`======================================================`);
 
   const attemptedRiderIds = new Set<string>();
-
-  let currentRadius = INITIAL_RADIUS_METERS;
   let round = 1;
-  let roundsInCurrentRadius = 0;
 
   try {
     while (true) {
       if (session.isAssigned) {
         console.log(
-          `[Matching] successful assignment: Order ${orderId} is already assigned. Stopping matching.`
+          `[Matching] Order ${orderId} is assigned. Stopping matching loop.`
         );
         break;
       }
 
       console.log(
-        `\n[Matching] round number: ${round} | [Matching] current radius: ${
-          currentRadius / 1000
-        } km | attempted riders: ${attemptedRiderIds.size}`
+        `\n[Matching] Round ${round} | Radius: 5 km | Attempted riders: ${attemptedRiderIds.size}`
       );
 
-      console.log(
-        `[Matching] fresh candidate search: Querying database for nearest unattempted eligible rider within ${
-          currentRadius / 1000
-        } km...`
-      );
-
+      // Fresh query for nearest eligible unattempted rider within 5 km
       const candidate = await Rider.findOne({
         isAvailble: true,
         isVerified: true,
@@ -221,52 +233,24 @@ export const processSequentialRiderMatching = async (data: {
               type: "Point",
               coordinates: restaurantCoords,
             },
-            $maxDistance: currentRadius,
+            $maxDistance: MAX_RADIUS_METERS,
           },
         },
       });
 
       if (!candidate) {
         console.log(
-          `[Matching] No eligible unattempted rider found within ${
-            currentRadius / 1000
-          } km.`
+          `[Matching] No more eligible unattempted riders found within 5 km for order ${orderId}.`
         );
-
-        const totalRiders = await Rider.countDocuments();
-        const verifiedRiders = await Rider.countDocuments({ isVerified: true });
-        const onlineRiders = await Rider.countDocuments({ isAvailble: true });
-        const verifiedAndOnline = await Rider.countDocuments({
-          isVerified: true,
-          isAvailble: true,
-        });
-        console.log(
-          `[Matching] Diagnostics: Total riders: ${totalRiders}, Verified riders: ${verifiedRiders}, Online riders: ${onlineRiders}, Verified & Online: ${verifiedAndOnline}`
-        );
-
-        if (currentRadius === INITIAL_RADIUS_METERS) {
-          console.log(
-            `[Matching] expanding radius: Expanding search radius from 5 km to 10 km.`
-          );
-          currentRadius = EXPANDED_RADIUS_METERS;
-          roundsInCurrentRadius = 0;
-          round++;
-          continue;
-        } else {
-          console.log(
-            `[Matching] No eligible riders found in 10 km radius. Expanded search exhausted.`
-          );
-          break;
-        }
+        break;
       }
 
       const candidateRiderId = candidate._id.toString();
       session.currentRiderId = candidateRiderId;
       attemptedRiderIds.add(candidateRiderId);
-      roundsInCurrentRadius++;
 
       console.log(
-        `[Matching] selected rider: ${candidateRiderId} (userId: ${candidate.userId}, phone: ${candidate.phoneNumber})`
+        `[Matching] Selected nearest eligible rider: ${candidateRiderId} (userId: ${candidate.userId}, phone: ${candidate.phoneNumber})`
       );
 
       let offerSent = false;
@@ -274,43 +258,25 @@ export const processSequentialRiderMatching = async (data: {
         await sendOfferToRider(candidate.userId, orderId, restaurantId);
         offerSent = true;
         console.log(
-          `[Matching] offer sent to rider ${candidateRiderId} (room: user:${candidate.userId})`
+          `[Matching] Offer sent to rider ${candidateRiderId} (room: user:${candidate.userId})`
         );
       } catch (err: any) {
         console.error(
-          `[Matching] offer delivery failed for rider ${candidateRiderId}:`,
+          `[Matching] Offer delivery failed for rider ${candidateRiderId}:`,
           err.message || err
         );
       }
 
       if (!offerSent) {
         console.log(
-          `[Matching] Skipping 30s wait due to notification failure for rider ${candidateRiderId}. Moving to next round.`
+          `[Matching] Notification failed for rider ${candidateRiderId}. Moving to next candidate immediately.`
         );
-        if (
-          currentRadius === INITIAL_RADIUS_METERS &&
-          roundsInCurrentRadius >= MAX_ROUNDS_PER_RADIUS
-        ) {
-          console.log(
-            `[Matching] expanding radius: Completed ${MAX_ROUNDS_PER_RADIUS} attempts in 5 km radius. Expanding radius to 10 km.`
-          );
-          currentRadius = EXPANDED_RADIUS_METERS;
-          roundsInCurrentRadius = 0;
-        } else if (
-          currentRadius === EXPANDED_RADIUS_METERS &&
-          roundsInCurrentRadius >= MAX_ROUNDS_PER_RADIUS
-        ) {
-          console.log(
-            `[Matching] Completed ${MAX_ROUNDS_PER_RADIUS} attempts in 10 km radius without acceptance.`
-          );
-          break;
-        }
         round++;
         continue;
       }
 
       console.log(
-        `[Matching] Waiting up to 30 seconds for rider ${candidateRiderId} response...`
+        `[Matching] Waiting up to 20 seconds for rider ${candidateRiderId} response...`
       );
 
       const result = await waitForRiderResponse(
@@ -322,36 +288,17 @@ export const processSequentialRiderMatching = async (data: {
 
       if (result === "accepted") {
         console.log(
-          `[Matching] successful assignment: Rider ${candidateRiderId} accepted order ${orderId}!`
+          `[Matching] Rider ${candidateRiderId} ACCEPTED order ${orderId}!`
         );
         break;
       } else if (result === "rejected") {
         console.log(
-          `[Matching] rider rejected: Rider ${candidateRiderId} rejected order ${orderId}.`
+          `[Matching] Rider ${candidateRiderId} REJECTED order ${orderId}. Querying next nearest rider...`
         );
       } else {
         console.log(
-          `[Matching] rider timed out: 30-second offer timeout expired for rider ${candidateRiderId}.`
+          `[Matching] 20-second offer timeout expired for rider ${candidateRiderId}. Querying next nearest rider...`
         );
-      }
-
-      if (
-        currentRadius === INITIAL_RADIUS_METERS &&
-        roundsInCurrentRadius >= MAX_ROUNDS_PER_RADIUS
-      ) {
-        console.log(
-          `[Matching] expanding radius: Completed ${MAX_ROUNDS_PER_RADIUS} attempts in 5 km radius. Expanding radius to 10 km.`
-        );
-        currentRadius = EXPANDED_RADIUS_METERS;
-        roundsInCurrentRadius = 0;
-      } else if (
-        currentRadius === EXPANDED_RADIUS_METERS &&
-        roundsInCurrentRadius >= MAX_ROUNDS_PER_RADIUS
-      ) {
-        console.log(
-          `[Matching] Completed ${MAX_ROUNDS_PER_RADIUS} attempts in 10 km radius without acceptance.`
-        );
-        break;
       }
 
       round++;
@@ -359,12 +306,12 @@ export const processSequentialRiderMatching = async (data: {
 
     if (!session.isAssigned) {
       console.log(
-        `[Matching] final delayed state: No rider accepted after expanded search for order ${orderId}. Flagging order as delayed.`
+        `[Matching] No rider accepted order ${orderId} within 5 km. Flagging order as delayed.`
       );
       await markOrderAsDelayed(orderId);
     } else {
       console.log(
-        `[Matching] successful assignment confirmed for order ${orderId}.`
+        `[Matching] Successful assignment confirmed for order ${orderId}.`
       );
     }
   } catch (error) {
@@ -421,7 +368,7 @@ export const startOrderReadyConsumer = async () => {
       console.error("[OrderConsumer] Consumer error:", error);
       try {
         channel.nack(msg, false, true);
-      } catch (ackError) {
+      } catch {
 
       }
     }
