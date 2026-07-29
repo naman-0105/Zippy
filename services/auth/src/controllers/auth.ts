@@ -10,7 +10,11 @@ export const getCookieOptions = () => {
   return {
     httpOnly: true,
     secure: isProduction,
-    sameSite: isProduction ? ("none" as const) : ("lax" as const),
+    sameSite: "lax" as const,
+    path: "/",
+    domain: isProduction
+      ? (process.env.COOKIE_DOMAIN || ".zippy.namangoyal.dev")
+      : undefined,
     maxAge: 15 * 24 * 60 * 60 * 1000, // 15 days
   };
 };
@@ -52,7 +56,7 @@ export const loginUser = TryCatch(async (req, res) => {
     }
   );
 
-  res.cookie("token", token, getCookieOptions());
+  res.cookie("accessToken", token, getCookieOptions());
 
   res.status(200).json({
     message: "Log in successful",
@@ -98,24 +102,20 @@ export const addUserRole = TryCatch(async (req: AuthenticatedRequest, res) => {
     }
   );
 
-  res.cookie("token", token, getCookieOptions());
+  res.cookie("accessToken", token, getCookieOptions());
 
   res.json({ message: "Role updated successfully", user });
 });
 
 export const logoutUser = TryCatch(async (req, res) => {
-  res.clearCookie("token", getCookieOptions());
+  res.clearCookie("accessToken", getCookieOptions());
   res.status(200).json({
     message: "Logged out successfully",
   });
 });
 
 export const myProfile = TryCatch(async (req, res) => {
-  const token =
-    req.cookies?.token ||
-    (req.headers.authorization?.startsWith("Bearer ")
-      ? req.headers.authorization.split(" ")[1]
-      : null);
+  const token = req.cookies?.accessToken;
 
   if (!token) {
     return res.status(200).json(null);

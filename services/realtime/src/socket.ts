@@ -5,27 +5,38 @@ import jwt from "jsonwebtoken";
 let io: Server;
 
 export const initSocket = (server: http.Server) => {
+  const defaultFrontendOrigin =
+    process.env.NODE_ENV === "production"
+      ? "https://zippy.namangoyal.dev"
+      : "http://localhost:5173";
+
   io = new Server(server, {
     cors: {
-      origin: process.env.FRONTEND_URL || "http://localhost:5173",
+      origin: process.env.FRONTEND_URL || defaultFrontendOrigin,
       credentials: true,
     },
   });
 
   io.use((socket, next) => {
     try {
-      let token = socket.handshake.auth?.token;
-      if (!token && socket.handshake.headers.cookie) {
-        const cookies = Object.fromEntries(
-          socket.handshake.headers.cookie
-            .split("; ")
-            .map((c) => {
-              const [key, ...v] = c.split("=");
-              return [key, v.join("=")];
-            })
-        );
-        token = cookies.token;
+      const cookieHeader = socket.handshake.headers.cookie;
+
+      if (!cookieHeader) {
+        return next(new Error("Unauthorized"));
       }
+
+      const cookies = Object.fromEntries(
+        cookieHeader
+          .split(";")
+          .map((c) => c.trim())
+          .filter(Boolean)
+          .map((c) => {
+            const [key, ...v] = c.split("=");
+            return [key, v.join("=")];
+          })
+      );
+
+      const token = cookies.accessToken;
 
       if (!token) {
         return next(new Error("Unauthorized"));

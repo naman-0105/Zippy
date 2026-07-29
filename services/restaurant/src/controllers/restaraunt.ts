@@ -105,7 +105,19 @@ export const fetchMyRestaurant = TryCatch(
         }
       );
 
-      return res.json({ restaurant, token });
+      res.cookie("accessToken", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax" as const,
+        path: "/",
+        domain:
+          process.env.NODE_ENV === "production"
+            ? (process.env.COOKIE_DOMAIN || ".zippy.namangoyal.dev")
+            : undefined,
+        maxAge: 15 * 24 * 60 * 60 * 1000,
+      });
+
+      return res.json({ restaurant });
     }
 
     res.json({ restaurant });

@@ -12,15 +12,11 @@ export const isAuth = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const token =
-      req.cookies?.token ||
-      (req.headers.authorization?.startsWith("Bearer ")
-        ? req.headers.authorization.split(" ")[1]
-        : null);
+    const token = req.cookies?.accessToken;
 
     if (!token) {
       res.status(401).json({
-        message: "Please Login - No auth token",
+        message: "Authentication required",
       });
       return;
     }
