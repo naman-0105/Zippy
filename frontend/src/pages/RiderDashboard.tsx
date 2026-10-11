@@ -4,11 +4,20 @@ import { useSocket } from "../context/SocketContext";
 import axios from "axios";
 import { riderService } from "../main";
 import toast from "react-hot-toast";
-import { BiUpload } from "react-icons/bi";
+import {
+  BiUpload,
+  BiCycling,
+  BiRadar,
+  BiVolumeFull,
+  BiShieldQuarter,
+} from "react-icons/bi";
 import type { IOrder } from "../types";
+import RiderHeader from "../components/RiderHeader";
+import RiderOverviewStats from "../components/RiderOverviewStats";
 import RiderOrderRequest from "../components/RiderOrderRequest";
 import RiderCurrentOrder from "../components/RiderCurrentOrder";
 import RiderOrderMap from "../components/RiderOrderMap";
+import RiderShiftInfo from "../components/RiderShiftInfo";
 
 interface IRider {
   _id: string;
@@ -30,7 +39,6 @@ const RiderDashboard = () => {
 
   const [profile, setProfile] = useState<IRider | null>(null);
   const [loading, setLoading] = useState(true);
-
   const [toggling, setToggling] = useState(false);
 
   const [incomingOrders, setIncomingOrders] = useState<string[]>([]);
@@ -51,16 +59,19 @@ const RiderDashboard = () => {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
       setAudioUnlocked(true);
-      toast.success("Sound Enabled");
+      toast.success("Sound alerts enabled");
     } catch {
-      toast.error("Tap again to enable sound");
+      toast.error("Tap to enable browser sound permission");
     }
   };
 
-  // Continuous live location tracking while Online to keep backend GPS updated
   useEffect(() => {
-    if (!profile?.isAvailble) return;
-    if (!navigator.geolocation) return;
+    if (!profile?.isAvailble) {
+      return;
+    }
+    if (!navigator.geolocation) {
+      return;
+    }
 
     let lastSentTime = 0;
 
@@ -68,7 +79,6 @@ const RiderDashboard = () => {
       async (pos) => {
         const { latitude, longitude } = pos.coords;
 
-        // Update backend with live coordinates (throttled to max once every 3s)
         const now = Date.now();
         if (now - lastSentTime >= 3000) {
           lastSentTime = now;
@@ -125,7 +135,6 @@ const RiderDashboard = () => {
   const fetchProfile = async () => {
     try {
       const { data } = await axios.get(`${riderService}/api/rider/myprofile`);
-
       setProfile(data || null);
     } catch {
       setProfile(null);
@@ -144,10 +153,9 @@ const RiderDashboard = () => {
       const { data } = await axios.get(
         `${riderService}/api/rider/order/current`
       );
-
-      setCurrentOrder(data.order);
+      setCurrentOrder(data.order || null);
     } catch (error) {
-      console.log(error);
+      console.log("No active order:", error);
       setCurrentOrder(null);
     }
   };
@@ -158,7 +166,7 @@ const RiderDashboard = () => {
 
   const toggleAvailiblity = async () => {
     if (!navigator.geolocation) {
-      toast.error("Location Access Required");
+      toast.error("Location access is required to go online");
       return;
     }
 
@@ -175,19 +183,24 @@ const RiderDashboard = () => {
             longitude,
           });
 
+          const goingOnline = !profile?.isAvailble;
           toast.success(
-            profile?.isAvailble ? "You are offline" : "You are online"
+            goingOnline
+              ? "You are now Online and ready for orders!"
+              : "You are now Offline"
           );
           fetchProfile();
         } catch (error: any) {
-          toast.error(error.response?.data?.message || "Failed to toggle status");
+          toast.error(
+            error.response?.data?.message || "Failed to toggle status"
+          );
         } finally {
           setToggling(false);
         }
       },
       () => {
         setToggling(false);
-        toast.error("Location access is required to go online");
+        toast.error("Location permission is required to go online");
       },
       { enableHighAccuracy: true, timeout: 15000 }
     );
@@ -199,7 +212,16 @@ const RiderDashboard = () => {
   const [image, setImage] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = async () => {
+  const handleProfileSubmit = async () => {
+    if (!phoneNumber || !aadharNumber || !drivingLicenseNumber) {
+      toast.error("Please fill in all profile fields");
+      return;
+    }
+    if (!image) {
+      toast.error("Please select a profile photo");
+      return;
+    }
+
     if (!navigator.geolocation) {
       toast.error("Location Access Required");
       return;
@@ -210,16 +232,12 @@ const RiderDashboard = () => {
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         const formData = new FormData();
-
         formData.append("phoneNumber", phoneNumber);
         formData.append("aadharNumber", aadharNumber);
         formData.append("drivingLicenseNumber", drivingLicenseNumber);
         formData.append("latitude", pos.coords.latitude.toString());
         formData.append("longitude", pos.coords.longitude.toString());
-
-        if (image) {
-          formData.append("file", image);
-        }
+        if (image) formData.append("file", image);
 
         try {
           const { data } = await axios.post(
@@ -227,10 +245,12 @@ const RiderDashboard = () => {
             formData
           );
 
-          toast.success(data.message);
+          toast.success(data.message || "Rider profile registered!");
           fetchProfile();
         } catch (error: any) {
-          toast.error(error.response?.data?.message || "Failed to create profile");
+          toast.error(
+            error.response?.data?.message || "Failed to register profile"
+          );
         } finally {
           setSubmitting(false);
         }
@@ -245,10 +265,17 @@ const RiderDashboard = () => {
 
   if (user?.role !== "rider") {
     return (
-      <div className="flex min-h-[60vh] items-center justify-center bg-slate-50 px-4">
-        <div className="flex w-full max-w-md flex-col items-center justify-center rounded-3xl border-2 border-dashed border-slate-200 bg-white/50 p-8 text-center transition-all hover:bg-white">
-          <p className="text-xl font-extrabold text-slate-800">Access Denied</p>
-          <p className="mt-2 text-sm font-medium text-slate-500">You are not registered as a rider.</p>
+      <div className="flex min-h-[70vh] items-center justify-center bg-slate-50 px-4">
+        <div className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-xs">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-50 text-rose-600">
+            <BiShieldQuarter className="h-7 w-7" />
+          </div>
+          <h2 className="text-xl font-extrabold text-slate-800">
+            Courier Access Only
+          </h2>
+          <p className="mt-2 text-sm text-slate-500">
+            This portal is reserved for registered Zippy delivery partners.
+          </p>
         </div>
       </div>
     );
@@ -256,64 +283,108 @@ const RiderDashboard = () => {
 
   if (loading) {
     return (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 bg-slate-50">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-indigo-100 border-t-indigo-600"></div>
-        <p className="text-sm font-semibold tracking-wide text-slate-500">Loading rider details...</p>
+      <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-slate-50">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-indigo-100 border-t-indigo-600" />
+        <p className="text-sm font-semibold tracking-wide text-slate-500">
+          Loading courier dashboard...
+        </p>
       </div>
     );
   }
 
   if (!profile) {
     return (
-      <div className="min-h-screen bg-slate-50 px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-lg space-y-6 rounded-3xl border border-slate-100 bg-white p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)] sm:p-8">
-          <h1 className="text-2xl font-extrabold tracking-tight text-slate-900">Add Your Profile</h1>
-          
-          <div className="space-y-4">
-            <input
-              type="number"
-              placeholder="Aadhar number"
-              value={aadharNumber}
-              onChange={(e) => setaadharNumber(e.target.value)}
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700 outline-none transition-all focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-50"
-            />
-            <input
-              type="number"
-              placeholder="Contact Number"
-              value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value)}
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700 outline-none transition-all focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-50"
-            />
-            <input
-              type="text"
-              placeholder="Driving Licence"
-              value={drivingLicenseNumber}
-              onChange={(e) => setDrivingLicenseNumber(e.target.value)}
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700 outline-none transition-all focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-50"
-            />
+      <div className="min-h-screen bg-slate-50">
+        <RiderHeader
+          profile={null}
+          toggling={false}
+          toggleAvailiblity={() => {}}
+          audioUnlocked={audioUnlocked}
+          unlockAudio={unlockAudio}
+          hasActiveOrder={false}
+        />
+        <div className="mx-auto max-w-lg px-4 py-12 sm:px-6">
+          <div className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm sm:p-8 space-y-6">
+            <div>
+              <h1 className="mt-2 text-2xl font-black text-slate-900 tracking-tight">
+                Complete Registration
+              </h1>
+              <p className="mt-1 text-xs text-slate-500">
+                Provide your identification and contact details to start delivering with Zippy.
+              </p>
+            </div>
 
-            <label className="group flex cursor-pointer items-center gap-3 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50/50 p-4 transition-all hover:border-indigo-300 hover:bg-indigo-50/30">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-100 text-indigo-600 transition-colors group-hover:bg-indigo-200">
-                <BiUpload className="h-5 w-5" />
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Aadhar Number
+                </label>
+                <input
+                  type="text"
+                  maxLength={12}
+                  placeholder="12-digit Aadhar number"
+                  value={aadharNumber}
+                  onChange={(e) => setaadharNumber(e.target.value.replace(/\D/g, ""))}
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-800 outline-none transition focus:border-indigo-600 focus:bg-white focus:ring-4 focus:ring-indigo-50"
+                />
               </div>
-              <span className="text-sm font-semibold text-slate-600 transition-colors group-hover:text-indigo-600">
-                {image ? image.name : "Upload your image"}
-              </span>
-              <input
-                type="file"
-                accept="image/*"
-                hidden
-                onChange={(e) => setImage(e.target.files?.[0] || null)}
-              />
-            </label>
 
-            <button
-              className="mt-2 w-full rounded-xl bg-indigo-600 py-3.5 text-sm font-bold text-white shadow-md shadow-indigo-200 transition-all hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
-              disabled={submitting}
-              onClick={handleSubmit}
-            >
-              {submitting ? "Submitting..." : "Add Profile"}
-            </button>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Contact Phone Number
+                </label>
+                <input
+                  type="text"
+                  maxLength={10}
+                  placeholder="10-digit mobile number"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ""))}
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-800 outline-none transition focus:border-indigo-600 focus:bg-white focus:ring-4 focus:ring-indigo-50"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Driving License Number
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. DL-0420110012345"
+                  value={drivingLicenseNumber}
+                  onChange={(e) => setDrivingLicenseNumber(e.target.value)}
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-800 outline-none transition focus:border-indigo-600 focus:bg-white focus:ring-4 focus:ring-indigo-50"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Courier Photo / ID
+                </label>
+                <label className="flex cursor-pointer items-center gap-3 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 p-4 transition hover:border-indigo-400 hover:bg-indigo-50/20">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-100 text-indigo-600">
+                    <BiUpload className="h-5 w-5" />
+                  </div>
+                  <span className="text-xs font-semibold text-slate-600 truncate">
+                    {image ? image.name : "Select photo to upload"}
+                  </span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    hidden
+                    onChange={(e) => setImage(e.target.files?.[0] || null)}
+                  />
+                </label>
+              </div>
+
+              <button
+                type="button"
+                disabled={submitting}
+                onClick={handleProfileSubmit}
+                className="mt-4 w-full rounded-xl bg-indigo-600 py-3.5 text-sm font-bold text-white shadow-md shadow-indigo-200 hover:bg-indigo-700 disabled:opacity-50 transition-all cursor-pointer"
+              >
+                {submitting ? "Submitting Registration..." : "Register as Rider"}
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -321,117 +392,139 @@ const RiderDashboard = () => {
   }
 
   return (
-    <div className="mx-auto max-w-md space-y-6 px-4 py-8 sm:max-w-xl sm:px-6 lg:px-8">
-      
-      {/* Profile Card */}
-      <div className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-[0_2px_12px_rgba(0,0,0,0.03)]">
-        <div className="relative h-24 bg-gradient-to-r from-indigo-500 to-violet-500 sm:h-32"></div>
-        <div className="relative px-6 pb-6 pt-0 text-center sm:px-8 sm:pb-8">
-          <img
-            src={profile.picture}
-            className="mx-auto -mt-12 h-24 w-24 rounded-full border-4 border-white bg-white object-cover shadow-md sm:-mt-16 sm:h-32 sm:w-32"
-            alt="Profile"
-          />
-          <h2 className="mt-4 text-xl font-extrabold text-slate-900">{user?.name}</h2>
-          <p className="mt-1 text-sm font-medium text-slate-500">{profile.phoneNumber}</p>
+    <div className="min-h-screen bg-slate-50/60 pb-16">
+      <RiderHeader
+        profile={profile}
+        toggling={toggling}
+        toggleAvailiblity={toggleAvailiblity}
+        audioUnlocked={audioUnlocked}
+        unlockAudio={unlockAudio}
+        hasActiveOrder={Boolean(currentOrder)}
+      />
 
-          <div className="mt-4 flex justify-center gap-3">
-            <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold ${profile.isVerified ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>
-              {profile.isVerified ? (
-                <><span className="h-1.5 w-1.5 rounded-full bg-emerald-500"></span> Verified</>
-              ) : (
-                <><span className="h-1.5 w-1.5 rounded-full bg-amber-500"></span> Pending</>
-              )}
-            </span>
-            <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold ${profile.isAvailble ? 'bg-indigo-50 text-indigo-600' : 'bg-slate-100 text-slate-500'}`}>
-              {profile.isAvailble ? (
-                <><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-indigo-500"></span> Online</>
-              ) : (
-                <><span className="h-1.5 w-1.5 rounded-full bg-slate-400"></span> Offline</>
-              )}
-            </span>
-          </div>
-
-          <div className="mt-6 rounded-xl bg-indigo-50/50 p-4 text-left text-xs font-medium leading-relaxed text-indigo-700">
-            Please be within a 5000m radius of any restaurant (hotspot) before going online to receive orders.
-          </div>
-
-          {profile.isVerified && !currentOrder && (
+      <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 space-y-6">
+        {!audioUnlocked && (
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4 text-slate-800 shadow-xs">
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-700">
+                <BiVolumeFull className="h-4 w-4" />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-slate-800">
+                  Enable Sound Notifications
+                </p>
+                <p className="text-xs text-slate-500">
+                  Allow audio alerts to hear incoming 20s delivery offers.
+                </p>
+              </div>
+            </div>
             <button
-              onClick={toggleAvailiblity}
-              disabled={toggling}
-              className={`mt-6 w-full rounded-xl py-3.5 text-sm font-bold text-white shadow-md transition-all disabled:cursor-not-allowed disabled:opacity-60 ${
-                toggling
-                  ? "bg-slate-400"
-                  : profile.isAvailble
-                  ? "bg-slate-800 hover:bg-slate-900"
-                  : "bg-indigo-600 shadow-indigo-200 hover:bg-indigo-700"
-              }`}
+              type="button"
+              onClick={unlockAudio}
+              className="rounded-lg bg-slate-900 px-3.5 py-1.5 text-xs font-bold text-white hover:bg-slate-800 transition self-end sm:self-auto"
             >
-              {toggling
-                ? "Updating..."
-                : profile.isAvailble
-                ? "Go Offline"
-                : "Go Online"}
+              Enable Sound
             </button>
-          )}
-        </div>
-      </div>
+          </div>
+        )}
 
-      {!audioUnlocked && (
-        <div className="flex items-center justify-between gap-4 rounded-2xl border border-indigo-100 bg-indigo-50 p-5 shadow-sm">
-          <div className="flex items-center gap-4">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-xl shadow-sm">🔔</div>
-            <div>
-              <p className="text-sm font-bold text-indigo-900">Enable Sound</p>
-              <p className="mt-0.5 text-xs font-medium text-indigo-700">Get notified when orders arrive</p>
+        <RiderOverviewStats
+          isAvailable={profile.isAvailble}
+          isVerified={profile.isVerified}
+          currentOrder={currentOrder}
+          toggling={toggling}
+          onToggleAvailability={toggleAvailiblity}
+        />
+
+        {profile.isAvailble && incomingOrders.length > 0 && (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h2 className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                Incoming Offers ({incomingOrders.length})
+              </h2>
+            </div>
+            <div className="space-y-3">
+              {incomingOrders.map((id) => (
+                <RiderOrderRequest
+                  key={id}
+                  orderId={id}
+                  onAccepted={() => {
+                    setIncomingOrders((prev) =>
+                      prev.filter((orderId) => orderId !== id)
+                    );
+                    fetchProfile();
+                    fetchCurrentOrder();
+                  }}
+                  onDeclined={() => {
+                    setIncomingOrders((prev) =>
+                      prev.filter((orderId) => orderId !== id)
+                    );
+                  }}
+                />
+              ))}
             </div>
           </div>
-          <button
-            onClick={unlockAudio}
-            className="shrink-0 rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition-all hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-100"
-          >
-            Enable
-          </button>
-        </div>
-      )}
+        )}
 
-      {profile.isAvailble && incomingOrders.length > 0 && (
-        <div className="space-y-4">
-          <h3 className="text-sm font-extrabold uppercase tracking-wider text-slate-500">Incoming Orders</h3>
-          <div className="space-y-3">
-            {incomingOrders.map((id) => (
-              <RiderOrderRequest
-                key={id}
-                orderId={id}
-                onAccepted={() => {
-                  setIncomingOrders((prev) => prev.filter((orderId) => orderId !== id));
-                  fetchProfile();
-                  fetchCurrentOrder();
-                }}
-                onDeclined={() => {
-                  setIncomingOrders((prev) => prev.filter((orderId) => orderId !== id));
-                }}
+        {currentOrder ? (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                Active Delivery
+              </h2>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+              <div className="lg:col-span-7">
+                <RiderCurrentOrder
+                  order={currentOrder}
+                  onStatusUpdate={() => {
+                    fetchCurrentOrder();
+                    fetchProfile();
+                  }}
+                />
+              </div>
+
+              <div className="lg:col-span-5 space-y-4">
+                <RiderOrderMap order={currentOrder} />
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-xs">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-slate-50 border border-slate-100 text-slate-500 mb-3">
+              <BiRadar
+                className={`h-6 w-6 ${
+                  profile.isAvailble ? "animate-spin text-slate-700" : "text-slate-400"
+                }`}
               />
-            ))}
-          </div>
-        </div>
-      )}
+            </div>
+            <h3 className="text-sm sm:text-base font-bold text-slate-900">
+              {profile.isAvailble
+                ? "Waiting for Delivery Requests..."
+                : "You Are Currently Offline"}
+            </h3>
+            <p className="mx-auto mt-1 max-w-sm text-xs text-slate-500 leading-relaxed">
+              {profile.isAvailble
+                ? "You are online and eligible for orders within 5 km. Keep this tab open to receive dispatches."
+                : "Turn online when ready to receive new delivery dispatches."}
+            </p>
 
-      {currentOrder && (
-        <div className="space-y-6">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-             <h3 className="text-sm font-extrabold uppercase tracking-wider text-indigo-600">Active Delivery</h3>
+            {!profile.isAvailble && profile.isVerified && (
+              <button
+                type="button"
+                onClick={toggleAvailiblity}
+                disabled={toggling}
+                className="mt-4 inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white hover:bg-slate-800 transition"
+              >
+                <BiCycling className="h-4 w-4" />
+                {toggling ? "Updating..." : "Go Online"}
+              </button>
+            )}
           </div>
-          <RiderCurrentOrder
-            order={currentOrder}
-            onStatusUpdate={fetchCurrentOrder}
-          />
-          <div className="overflow-hidden rounded-2xl border border-slate-100 shadow-[0_2px_12px_rgba(0,0,0,0.03)]">
-            <RiderOrderMap order={currentOrder} />
-          </div>
-        </div>
-      )}
+        )}
+        <RiderShiftInfo />
+      </main>
     </div>
   );
 };

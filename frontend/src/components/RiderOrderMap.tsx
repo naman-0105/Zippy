@@ -6,6 +6,7 @@ import "leaflet/dist/leaflet.css";
 import "leaflet-routing-machine";
 import axios from "axios";
 import { realtimeService } from "../main";
+import { BiNavigation } from "react-icons/bi";
 
 declare module "leaflet" {
   namespace Routing {
@@ -15,15 +16,15 @@ declare module "leaflet" {
 }
 
 const riderIcon = new L.DivIcon({
-  html: "🛵",
-  iconSize: [30, 30],
-  className: "",
+  html: "<div class='text-2xl drop-shadow-md select-none'>🛵</div>",
+  iconSize: [32, 32],
+  className: "rider-marker",
 });
 
 const deliveryIcon = new L.DivIcon({
-  html: "📦",
-  iconSize: [30, 30],
-  className: "",
+  html: "<div class='text-2xl drop-shadow-md select-none'>📍</div>",
+  iconSize: [32, 32],
+  className: "delivery-marker",
 });
 
 interface Props {
@@ -43,7 +44,7 @@ const Routing = ({
     const control = L.Routing.control({
       waypoints: [L.latLng(from), L.latLng(to)],
       lineOptions: {
-        styles: [{ color: "#E23744", weight: 5 }],
+        styles: [{ color: "#4F46E5", weight: 5, opacity: 0.85 }],
       },
       addWaypoints: false,
       draggableWaypoints: false,
@@ -55,7 +56,11 @@ const Routing = ({
     }).addTo(map);
 
     return () => {
-      map.removeControl(control);
+      try {
+        map.removeControl(control);
+      } catch {
+
+      }
     };
   }, [from, to, map]);
 
@@ -68,8 +73,8 @@ const RiderOrderMap = ({ order }: Props) => {
   );
 
   if (
-    order.deliveryAddress.latitude == null ||
-    order.deliveryAddress.longitude == null
+    order.deliveryAddress?.latitude == null ||
+    order.deliveryAddress?.longitude == null
   ) {
     return null;
   }
@@ -80,29 +85,36 @@ const RiderOrderMap = ({ order }: Props) => {
   ];
 
   useEffect(() => {
+    let isMounted = true;
+
     const fetchLocation = () => {
+      if (!navigator.geolocation) return;
+
       navigator.geolocation.getCurrentPosition(
         (pos) => {
+          if (!isMounted) return;
           const latitude = pos.coords.latitude;
           const longitude = pos.coords.longitude;
 
           setRiderLocation([latitude, longitude]);
 
-          axios.post(
-            `${realtimeService}/api/v1/internal/emit`,
-            {
-              event: "rider:location",
-              room: `user:${order.userId}`,
-              payload: { latitude, longitude },
-            },
-            {
-              headers: {
-                "x-internal-key": import.meta.env.VITE_INTERNAL_SERVICE_KEY,
+          axios
+            .post(
+              `${realtimeService}/api/v1/internal/emit`,
+              {
+                event: "rider:location",
+                room: `user:${order.userId}`,
+                payload: { latitude, longitude },
               },
-            }
-          );
+              {
+                headers: {
+                  "x-internal-key": import.meta.env.VITE_INTERNAL_SERVICE_KEY,
+                },
+              }
+            )
+            .catch(() => {});
         },
-        (err) => console.log("Location Error:", err),
+        (err) => console.log("Rider Map Location:", err),
         {
           enableHighAccuracy: true,
           maximumAge: 5000,
@@ -114,26 +126,43 @@ const RiderOrderMap = ({ order }: Props) => {
     fetchLocation();
     const interval = setInterval(fetchLocation, 10000);
 
-    return () => clearInterval(interval);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
   }, [order.userId]);
 
-  if (!riderLocation) return null;
+  if (!riderLocation) {
+    return (
+      <div className="flex h-72 w-full flex-col items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 text-slate-500">
+        <div className="h-7 w-7 animate-spin rounded-full border-2 border-indigo-200 border-t-indigo-600 mb-2"></div>
+        <p className="text-xs font-semibold">Acquiring live map coordinates...</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="rounded-xl bg-white shadow-sm p-3">
+    <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs">
+      <div className="absolute top-3 left-3 z-[1000] flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1 shadow-md border border-slate-200/80 text-[11px] font-bold text-slate-800 backdrop-blur-xs">
+        <BiNavigation className="h-3.5 w-3.5 text-indigo-600 animate-pulse" />
+        <span>Live Route to Customer</span>
+      </div>
+
       <MapContainer
         center={riderLocation}
         zoom={14}
-        className="h-87.5 w-full rounded-lg"
+        scrollWheelZoom={false}
+        className="h-80 sm:h-96 w-full"
       >
         <TileLayer
-          attribution="&copy; OpenStreetMap"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         <Marker position={riderLocation} icon={riderIcon}>
-          <Popup>You (Rider)</Popup>
+          <Popup>You (Current Location)</Popup>
         </Marker>
         <Marker position={deliveryLocation} icon={deliveryIcon}>
-          <Popup>Delivery Location</Popup>
+          <Popup>Customer Delivery Location</Popup>
         </Marker>
         <Routing from={riderLocation} to={deliveryLocation} />
       </MapContainer>
