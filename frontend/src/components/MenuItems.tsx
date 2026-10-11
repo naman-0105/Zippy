@@ -19,7 +19,7 @@ const MenuItems = ({ items, onItemDeleted, isSeller }: MenuItemsProps) => {
   const [loadingItemId, setLoadingItemId] = useState<string | null>(null);
 
   const handleDelete = async (itemId: string) => {
-    const confirm = window.confirm("Are you sure you want to delete this item");
+    const confirm = window.confirm("Are you sure you want to delete this item?");
     if (!confirm) return;
 
     try {
@@ -70,6 +70,15 @@ const MenuItems = ({ items, onItemDeleted, isSeller }: MenuItemsProps) => {
       setLoadingItemId(null);
     }
   };
+
+  if (items.length === 0) {
+    return (
+      <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-xs">
+        <p className="text-xs font-medium text-slate-500">No menu items added yet.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
       {items.map((item) => {
@@ -77,79 +86,89 @@ const MenuItems = ({ items, onItemDeleted, isSeller }: MenuItemsProps) => {
 
         return (
           <div
-            className={`relative flex gap-4 rounded-lg bg-white p-4 shadow-sm transition ${
-              !item.isAvailable ? "opacity-70" : ""
-            }`}
             key={item._id}
+            className={`rounded-2xl border border-slate-200 bg-white p-4 shadow-xs transition hover:border-slate-300 flex flex-col justify-between space-y-3 ${
+              !item.isAvailable ? "opacity-75" : ""
+            }`}
           >
-            <div className="relative shrink-0">
-              <img
-                src={item.image}
-                alt=""
-                className={`h-20 w-20 rounded object-cover ${
-                  !item.isAvailable ? "grayscale brightness-75" : ""
-                }`}
-              />
-              {!item.isAvailable && (
-                <span className="absolute inset-0 flex items-center justify-center rounded bg-black/60 text-xs font-semibold text-white">
-                  Not Available
-                </span>
-              )}
-            </div>
+            <div className="space-y-3">
+              <div className="relative h-36 w-full overflow-hidden rounded-xl bg-slate-100">
+                <img
+                  src={item.image}
+                  alt=""
+                  className={`h-full w-full object-cover ${
+                    !item.isAvailable ? "grayscale contrast-75" : ""
+                  }`}
+                />
+                {!item.isAvailable && (
+                  <span className="absolute inset-0 flex items-center justify-center bg-slate-900/60 text-xs font-semibold text-white">
+                    Not Available
+                  </span>
+                )}
+              </div>
 
-            <div className="flex flex-1 flex-col justify-between">
               <div>
-                <h3 className="font-semibold">{item.name}</h3>
+                <h3 className="text-sm font-bold text-slate-900 line-clamp-1">
+                  {item.name}
+                </h3>
                 {item.description && (
-                  <p className="text-sm text-gray-500 line-clamp-2">
+                  <p className="mt-1 text-xs text-slate-500 line-clamp-2 leading-relaxed">
                     {item.description}
                   </p>
                 )}
               </div>
+            </div>
 
-              <div className="flex items-center justify-between ">
-                <p className="font-medium">₹{item.price}</p>
+            <div className="flex items-center justify-between border-t border-slate-100 pt-3">
+              <span className="text-sm font-bold text-slate-900">
+                ₹{item.price}
+              </span>
 
-                {isSeller && (
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => toggleAvailiblity(item._id)}
-                      className="rounded-lg p-2 text-gray-600 hover:bg-gray-100"
-                    >
-                      {item.isAvailable ? (
-                        <BsEye size={18} />
-                      ) : (
-                        <FiEyeOff size={18} />
-                      )}
-                    </button>
-
-                    <button
-                      onClick={() => handleDelete(item._id)}
-                      className="rounded-lg p-2 text-blue-500 hover:bg-red-50"
-                    >
-                      <BiTrash size={18} />
-                    </button>
-                  </div>
-                )}
-
-                {!isSeller && (
+              {isSeller && (
+                <div className="flex items-center gap-1.5">
                   <button
-                    disabled={!item.isAvailable || isLoading}
-                    onClick={() => addToCart(item.restaurantId, item._id)}
-                    className={`flex items-center justify-center rounded-lg p-2 ${
-                      !item.isAvailable || isLoading
-                        ? "cursor-not-allowed text-gray-400"
-                        : "text-red-500 hover:bg-red-50"
-                    }`}
+                    type="button"
+                    onClick={() => toggleAvailiblity(item._id)}
+                    className="rounded-lg border border-slate-200 p-1.5 text-slate-600 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600 transition"
                   >
-                    {isLoading ? (
-                      <VscLoading size={18} className="animate-spin" />
+                    {item.isAvailable ? (
+                      <BsEye size={15} />
                     ) : (
-                      <BsCartPlus size={18} />
+                      <FiEyeOff size={15} />
                     )}
                   </button>
-                )}
-              </div>
+
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(item._id)}
+                    className="rounded-lg border border-slate-200 p-1.5 text-slate-500 hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 transition"
+                  >
+                    <BiTrash size={15} />
+                  </button>
+                </div>
+              )}
+
+              {!isSeller && (
+                <button
+                  type="button"
+                  disabled={!item.isAvailable || isLoading}
+                  onClick={() => addToCart(item.restaurantId, item._id)}
+                  className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold transition ${
+                    !item.isAvailable || isLoading
+                      ? "cursor-not-allowed bg-slate-100 text-slate-400"
+                      : "bg-blue-600 text-white hover:bg-blue-700 shadow-xs"
+                  }`}
+                >
+                  {isLoading ? (
+                    <VscLoading size={14} className="animate-spin" />
+                  ) : (
+                    <>
+                      <BsCartPlus size={14} />
+                      Add
+                    </>
+                  )}
+                </button>
+              )}
             </div>
           </div>
         );

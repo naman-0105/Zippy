@@ -13,21 +13,21 @@ interface props {
 const statusColor = (status: string) => {
   switch (status) {
     case "placed":
-      return "bg-yellow-100 text-yellow-700";
+      return "bg-slate-100 text-slate-700 border-slate-200";
     case "accepted":
-      return "bg-orange-100 text-orange-700";
+      return "bg-slate-100 text-slate-800 border-slate-200";
     case "preparing":
-      return "bg-blue-100 text-blue-700";
+      return "bg-slate-100 text-slate-800 border-slate-200";
     case "ready_for_rider":
-      return "bg-indigo-100 text-indigo-700";
+      return "bg-slate-100 text-slate-800 border-slate-200";
     case "picked_up":
-      return "bg-purple-100 text-purple-700";
+      return "bg-slate-100 text-slate-800 border-slate-200";
     case "delivered":
-      return "bg-green-100 text-green-700";
+      return "bg-emerald-50 text-emerald-700 border-emerald-200";
     case "delayed":
-      return "bg-amber-100 text-amber-700";
+      return "bg-amber-50 text-amber-700 border-amber-200";
     default:
-      return "bg-gray-100 text-gray-700";
+      return "bg-slate-100 text-slate-700 border-slate-200";
   }
 };
 
@@ -62,18 +62,21 @@ const OrderCard = ({ order, onStatusUpdate }: props) => {
       toast.success("Order updated");
       onStatusUpdate?.();
     } catch (error: any) {
-      toast.error(error.response.data.message);
+      toast.error(error.response?.data?.message || "Failed to update order");
     } finally {
       setLoading(false);
     }
   };
+
   return (
-    <div className="rounded-xl bg-white p-4 shadow-sm space-y-3">
-      <div className="flex justify-between items-center">
-        <p className="text-sm font-medium">Order #{order._id.slice(-6)}</p>
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs space-y-3.5 hover:border-slate-300 transition">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-bold text-slate-900 tracking-tight">
+          Order #{order._id.slice(-6)}
+        </span>
 
         <span
-          className={`rounded-full px-3 py-1 text-xs font-medium ${statusColor(
+          className={`rounded-full border px-2.5 py-0.5 text-[11px] font-semibold capitalize ${statusColor(
             order.status
           )}`}
         >
@@ -81,29 +84,37 @@ const OrderCard = ({ order, onStatusUpdate }: props) => {
         </span>
       </div>
 
-      <div className="text-sm text-gray-600 space-y-1">
+      <div className="space-y-1.5 py-1">
         {order.items.map((item, i) => (
-          <p key={i}>
-            {item.name} x {item.quauntity}
-          </p>
+          <div
+            key={i}
+            className="flex items-center justify-between text-xs text-slate-700"
+          >
+            <span className="font-medium text-slate-800">
+              {item.name} × {item.quauntity}
+            </span>
+          </div>
         ))}
       </div>
 
-      <div className="flex justify-between text-sm font-medium">
-        <span>Total</span>
-        <span>₹{order.totalAmount}</span>
+      <div className="flex items-center justify-between border-t border-slate-100 pt-3 text-xs">
+        <span className="text-slate-500 capitalize">
+          Payment: {order.paymentStatus}
+        </span>
+        <span className="font-bold text-slate-900 text-sm">
+          ₹{order.totalAmount}
+        </span>
       </div>
 
-      <p className="text-xs text-gray-400">Payment: {order.paymentStatus}</p>
-
       {order.paymentStatus === "paid" && actions.length > 0 && (
-        <div className="flex flex-wrap gap-2 pt-2">
+        <div className="flex flex-wrap gap-2 pt-1 border-t border-slate-100">
           {actions.map((status) => (
             <button
               key={status}
+              type="button"
               disabled={loading}
               onClick={() => updateStatus(status)}
-              className="rounded-lg bg-[#e23744] px-3 py-1 text-xs text-white hover:bg-[#d32f3a] disabled:opacity-50"
+              className="rounded-xl bg-blue-600 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-blue-700 shadow-xs disabled:opacity-50 transition"
             >
               Mark as {status.replaceAll("_", " ")}
             </button>
@@ -112,10 +123,12 @@ const OrderCard = ({ order, onStatusUpdate }: props) => {
       )}
 
       {order.status === "ready_for_rider" && retryVisible && (
-        <div className="pt-2">
+        <div className="pt-1">
           <button
-            className="w-full rounded-lg border border-[#e23744] py-2 text-xs font-semibold text-[#e23744] hover:bg-red-50 disabled:opacity-50"
+            type="button"
+            disabled={loading}
             onClick={() => updateStatus("ready_for_rider")}
+            className="w-full rounded-xl border border-blue-600 py-2 text-xs font-semibold text-blue-600 hover:bg-blue-50 disabled:opacity-50 transition"
           >
             Retry Ready for Rider
           </button>

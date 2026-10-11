@@ -20,12 +20,11 @@ const AddRestaurant = ({ fetchMyRestaurant }: props) => {
 
   const handleSubmit = async () => {
     if (!name || !image || !location) {
-      alert("All field are required");
+      alert("All fields and location are required");
       return;
     }
 
     const formData = new FormData();
-
     formData.append("name", name);
     formData.append("description", description);
     formData.append("latitude", String(location.latitude));
@@ -38,66 +37,110 @@ const AddRestaurant = ({ fetchMyRestaurant }: props) => {
       setSubmitting(true);
       await axios.post(`${restaurantService}/api/restaurant/new`, formData);
 
-      toast.success("Restaurant Added successfully");
+      toast.success("Restaurant added successfully");
       fetchMyRestaurant();
     } catch (error: any) {
-      toast.error(error.response.data.message);
+      toast.error(error.response?.data?.message || "Failed to add restaurant");
     } finally {
       setSubmitting(false);
     }
   };
+
   return (
-    <div className="min-h-screen bg-gray-50 px-4 py-6">
-      <div className="mx-auto max-w-lg rounded-xl bg-white p-6 shadow-sm space-y-5">
-        <h1 className="text-xl font-semibold">Add Your Restaurant</h1>
-        <input
-          type="text"
-          placeholder="Restaurant name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="w-full rounded-lg border px-4 py-2 text-sm outline-none"
-        />
-        <input
-          type="number"
-          placeholder="Contact Number"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-          className="w-full rounded-lg border px-4 py-2 text-sm outline-none"
-        />
-        <textarea
-          placeholder="Restaurant Description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          className="w-full rounded-lg border px-4 py-2 text-sm outline-none"
-        />
-
-        <label className="flex cursor-pointer items-center gap-3 rounded-lg border p-4 text-sm text-gray-600 hover:bg-gray-50">
-          <BiUpload className="h-5 w-5 text-blue-500" />
-          {image ? image.name : "Upload restaurant image"}
-          <input
-            type="file"
-            accept="image/*"
-            hidden
-            onChange={(e) => setImage(e.target.files?.[0] || null)}
-          />
-        </label>
-
-        <div className="flex items-start gap-3 rounded-lg boder p-4">
-          <BiMapPin className="mt-0.5 h-5 w-5 text-blue-500" />
-          <div className="text-sm">
-            {loadingLocation
-              ? "Fetching you location..."
-              : location?.formattedAddress || "Location not available"}
-          </div>
+    <div className="min-h-screen bg-slate-50/60 px-4 py-12">
+      <div className="mx-auto max-w-lg rounded-2xl border border-slate-200 bg-white p-6 sm:p-8 shadow-xs space-y-6">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+            Register Your Restaurant
+          </h1>
+          <p className="mt-1 text-xs text-slate-500">
+            Set up your restaurant store details to start receiving customer orders on Zippy.
+          </p>
         </div>
 
-        <button
-          className="w-full rounded-lg py-3 text-sm font-semibold text-white bg-blue-700"
-          disabled={submitting}
-          onClick={handleSubmit}
-        >
-          {submitting ? "Submitting..." : "Add Restaurant"}
-        </button>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1">
+              Restaurant Name
+            </label>
+            <input
+              type="text"
+              placeholder="e.g. Spice Symphony"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs sm:text-sm font-medium text-slate-800 outline-none transition focus:border-blue-600 focus:bg-white focus:ring-4 focus:ring-blue-50"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1">
+              Contact Phone
+            </label>
+            <input
+              type="text"
+              placeholder="10-digit mobile number"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs sm:text-sm font-medium text-slate-800 outline-none transition focus:border-blue-600 focus:bg-white focus:ring-4 focus:ring-blue-50"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1">
+              Description
+            </label>
+            <textarea
+              rows={3}
+              placeholder="Short description of cuisines or specialties"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs sm:text-sm font-medium text-slate-800 outline-none transition focus:border-blue-600 focus:bg-white focus:ring-4 focus:ring-blue-50"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1">
+              Storefront Photo
+            </label>
+            <label className="flex cursor-pointer items-center gap-3 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 p-4 transition hover:border-blue-400 hover:bg-blue-50/20">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+                <BiUpload className="h-5 w-5" />
+              </div>
+              <span className="text-xs font-semibold text-slate-600 truncate">
+                {image ? image.name : "Select photo to upload"}
+              </span>
+              <input
+                type="file"
+                accept="image/*"
+                hidden
+                onChange={(e) => setImage(e.target.files?.[0] || null)}
+              />
+            </label>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1">
+              Detected Store Location
+            </label>
+            <div className="flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3.5">
+              <BiMapPin className="mt-0.5 h-4 w-4 shrink-0 text-blue-600" />
+              <div className="text-xs font-medium text-slate-600">
+                {loadingLocation
+                  ? "Detecting location coordinates..."
+                  : location?.formattedAddress || "Location unavailable"}
+              </div>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            className="w-full rounded-xl bg-blue-600 py-3 text-xs font-bold text-white shadow-xs hover:bg-blue-700 disabled:opacity-50 transition"
+            disabled={submitting}
+            onClick={handleSubmit}
+          >
+            {submitting ? "Registering..." : "Add Restaurant"}
+          </button>
+        </div>
       </div>
     </div>
   );
