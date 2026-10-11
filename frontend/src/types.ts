@@ -28,6 +28,12 @@ export interface AppContextType {
   fetchCart: () => Promise<void>;
   subTotal: number;
   quauntity: number;
+  isDemoLocation: boolean;
+  setDemoLocation: () => void;
+  restoreRealLocation: () => void;
+  requestUserLocation: () => void;
+  realLocation: LocationData | null;
+  locationError: string | null;
 }
 
 export interface IRestaurant {

@@ -5,7 +5,7 @@ import { CgShoppingCart } from "react-icons/cg";
 import { BiMapPin, BiSearch } from "react-icons/bi";
 
 const Navbar = () => {
-  const { isAuth, city, quauntity } = useAppData();
+  const { isAuth, city, quauntity, isDemoLocation, restoreRealLocation } = useAppData();
   const currLocation = useLocation();
 
   const isCustomerHomePage = isAuth && currLocation.pathname === "/";
@@ -87,11 +87,34 @@ const Navbar = () => {
       {isCustomerHomePage && (
         <div className="border-t border-slate-100 bg-slate-50 px-4 py-2.5 sm:px-6 lg:px-8">
           <div className="mx-auto flex max-w-7xl items-center rounded-xl border border-slate-200 bg-white p-1 shadow-xs">
-            <div className="mr-2 flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-2 text-slate-700">
-              <BiMapPin className="h-4 w-4 text-indigo-500" />
-              <span className="max-w-[140px] truncate text-xs font-medium sm:text-sm">
+            <div
+              className={`mr-2 flex items-center gap-1.5 rounded-lg px-3 py-2 text-slate-700 transition-colors ${
+                isDemoLocation
+                  ? "bg-amber-50 border border-amber-200 text-amber-900"
+                  : "bg-slate-50"
+              }`}
+            >
+              <BiMapPin
+                className={`h-4 w-4 ${
+                  isDemoLocation ? "text-amber-600" : "text-indigo-500"
+                }`}
+              />
+              <span className="max-w-[140px] truncate text-xs font-semibold sm:text-sm">
                 {city}
               </span>
+              {isDemoLocation && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    restoreRealLocation();
+                  }}
+                  title="Return to real location"
+                  className="ml-1 rounded bg-amber-200/80 px-1 py-0.5 text-[9px] font-extrabold uppercase text-amber-900 hover:bg-amber-300"
+                >
+                  Demo
+                </button>
+              )}
             </div>
             <div className="flex flex-1 items-center gap-2 border-l border-slate-100 px-3 py-2">
               <BiSearch className="h-4 w-4 text-slate-400" />

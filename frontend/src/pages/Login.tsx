@@ -68,6 +68,26 @@ const Login = () => {
     }
   };
 
+  const loginAsDemo = async () => {
+    setLoading(true);
+    try {
+      const result = await axios.post(`${authService}/api/auth/demo-login`, {
+        role: targetRole,
+      });
+
+      const loggedInUser = result.data.user;
+      toast.success(result.data.message || "Logged in as Demo User");
+      setUser(loggedInUser);
+      setIsAuth(true);
+      navigate("/");
+    } catch (error) {
+      console.error(error);
+      toast.error("Problem with demo login");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const googleLogin = useGoogleLogin({
     onSuccess: responseGoogle,
     onError: () => {
@@ -99,6 +119,23 @@ const Login = () => {
         >
           <FcGoogle size={20} />
           {loading ? "Signing in..." : "Continue with Google"}
+        </button>
+
+        <div className="my-4 flex items-center gap-2">
+          <div className="h-px flex-1 bg-slate-200"></div>
+          <span className="text-[11px] font-semibold uppercase text-slate-400">
+            or preview
+          </span>
+          <div className="h-px flex-1 bg-slate-200"></div>
+        </div>
+
+        <button
+          type="button"
+          onClick={loginAsDemo}
+          disabled={loading}
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-50 border border-indigo-200 px-4 py-3 text-sm font-bold text-indigo-700 shadow-xs transition-colors hover:bg-indigo-100 disabled:opacity-60"
+        >
+          Demo Login ({targetRole})
         </button>
 
         {targetRole !== "customer" && (

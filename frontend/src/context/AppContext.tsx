@@ -70,43 +70,106 @@ export const AppProvider = ({ children }: AppProviderProps) => {
     }
   }, [user]);
 
-  useEffect(() => {
-    if (!navigator.geolocation)
-      return alert("Please Allow Location to continue");
+  const [realLocation, setRealLocation] = useState<LocationData | null>(null);
+  const [realCity, setRealCity] = useState("Your Location");
+  const [isDemoLocation, setIsDemoLocation] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
+
+  const requestUserLocation = () => {
+    if (!navigator.geolocation) {
+      setLocationError("Geolocation is not supported by your browser.");
+      setLoadingLocation(false);
+      return;
+    }
+
     setLoadingLocation(true);
+    setLocationError(null);
 
-    navigator.geolocation.getCurrentPosition(async (position) => {
-      const { latitude, longitude } = position.coords;
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
 
-      try {
-        const res = await fetch(
-          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
-        );
-        const data = await res.json();
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
+          );
+          const data = await res.json();
 
-        setLocation({
-          latitude,
-          longitude,
-          formattedAddress: data.display_name || "current location",
-        });
+          const resolvedAddress = data.display_name || "Current Location";
+          const resolvedCity =
+            data.address?.city ||
+            data.address?.town ||
+            data.address?.village ||
+            "Your Location";
 
-        setCity(
-          data.address.city ||
-            data.address.town ||
-            data.address.village ||
-            "Your Location"
-        );
+          const userLoc: LocationData = {
+            latitude,
+            longitude,
+            formattedAddress: resolvedAddress,
+          };
+
+          setRealLocation(userLoc);
+          setRealCity(resolvedCity);
+
+          if (!isDemoLocation) {
+            setLocation(userLoc);
+            setCity(resolvedCity);
+          }
+          setLoadingLocation(false);
+        } catch {
+          const fallbackLoc: LocationData = {
+            latitude,
+            longitude,
+            formattedAddress: "Current Location",
+          };
+          setRealLocation(fallbackLoc);
+          setRealCity("Your Location");
+
+          if (!isDemoLocation) {
+            setLocation(fallbackLoc);
+            setCity("Your Location");
+          }
+          setLoadingLocation(false);
+        }
+      },
+      (error) => {
         setLoadingLocation(false);
-      } catch {
-        setLocation({
-          latitude,
-          longitude,
-          formattedAddress: "Current Location",
-        });
-        setCity("Failed to load");
-        setLoadingLocation(false);
-      }
-    });
+        setLocationError(error.message || "Unable to retrieve your location.");
+        if (!isDemoLocation && !location) {
+          setCity("Location Unavailable");
+        }
+      },
+      { timeout: 10000, enableHighAccuracy: true }
+    );
+  };
+
+  const setDemoLocation = () => {
+    const demoLoc: LocationData = {
+      latitude: 13.5558,
+      longitude: 80.0272,
+      formattedAddress: "Gnan Marg, Sri City, Andhra Pradesh 517646, India",
+    };
+    setLocation(demoLoc);
+    setCity("Sri City (Demo)");
+    setIsDemoLocation(true);
+    setLoadingLocation(false);
+    setLocationError(null);
+  };
+
+  const restoreRealLocation = () => {
+    setIsDemoLocation(false);
+    if (realLocation) {
+      setLocation(realLocation);
+      setCity(realCity);
+    } else {
+      setLocation(null);
+      setCity("Fetching Location...");
+      requestUserLocation();
+    }
+  };
+
+  useEffect(() => {
+    requestUserLocation();
   }, []);
 
   return (
@@ -125,6 +188,12 @@ export const AppProvider = ({ children }: AppProviderProps) => {
         fetchCart,
         quauntity,
         subTotal,
+        isDemoLocation,
+        setDemoLocation,
+        restoreRealLocation,
+        requestUserLocation,
+        realLocation,
+        locationError,
       }}
     >
       {children}

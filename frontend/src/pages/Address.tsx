@@ -11,7 +11,8 @@ import toast from "react-hot-toast";
 import { restaurantService } from "../main";
 import L from "leaflet";
 import { LuLocateFixed } from "react-icons/lu";
-import { BiLoader, BiPlus, BiTrash } from "react-icons/bi";
+import { BiCompass, BiLoader, BiPlus, BiTrash } from "react-icons/bi";
+import { useAppData } from "../context/AppContext";
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -72,6 +73,7 @@ const LocateMeButton = ({
 };
 
 const AddAddressPage = () => {
+  const { isDemoLocation } = useAppData();
   const [addresses, setAddresses] = useState<Address[]>([]);
 
   const [loading, setLoading] = useState(true);
@@ -82,6 +84,13 @@ const AddAddressPage = () => {
   const [formattedAddress, setFormattedAddress] = useState("");
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
+
+  const fillDemoHubAddress = () => {
+    setLatitude(13.5558);
+    setLongitude(80.0272);
+    setFormattedAddress("Gnan Marg, Sri City, Andhra Pradesh 517646, India");
+    if (!mobile) setMobile("9876543210");
+  };
 
   const fetchFormattedAddress = async (lat: number, lng: number) => {
     try {
@@ -163,11 +172,24 @@ const AddAddressPage = () => {
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-6 space-y-6">
-      <h1 className="text-2xl font-bold">Select Delivery Address</h1>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <h1 className="text-2xl font-bold">Select Delivery Address</h1>
+        <button
+          type="button"
+          onClick={fillDemoHubAddress}
+          className="inline-flex items-center gap-1.5 self-start sm:self-auto rounded-lg border border-indigo-200 bg-indigo-50 px-3.5 py-2 text-xs font-bold text-indigo-700 hover:bg-indigo-100"
+        >
+          <BiCompass className="h-4 w-4" />
+          Fill Demo Hub Address
+        </button>
+      </div>
 
       <div className="relative h-100 w-full overflow-hidden rounded-lg border">
         <MapContainer
-          center={[latitude || 28.6139, longitude || 77.209]}
+          center={[
+            latitude || (isDemoLocation ? 13.5558 : 28.6139),
+            longitude || (isDemoLocation ? 80.0272 : 77.209),
+          ]}
           zoom={13}
           className="h-full w-full"
           style={{ height: "100%", width: "100%" }}
@@ -196,14 +218,16 @@ const AddAddressPage = () => {
         className="w-full rounded-lg border px-4 py-2"
       />
 
-      <button
-        disabled={adding}
-        onClick={addAddress}
-        className="flex items-center justify-center gap-2 rounded-lg bg-blue-800 px-4 py-3 text-white hover:bg-[#d32f3a] disabled:opacity-50"
-      >
-        {adding ? <BiLoader className="animate-spin" /> : <BiPlus />}
-        Save Address
-      </button>
+      <div className="flex flex-col sm:flex-row gap-3">
+        <button
+          disabled={adding}
+          onClick={addAddress}
+          className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-3 text-white font-semibold hover:bg-indigo-700 disabled:opacity-50"
+        >
+          {adding ? <BiLoader className="animate-spin" /> : <BiPlus />}
+          Save Address
+        </button>
+      </div>
 
       <div className="space-y-3">
         <h2 className="text-lg font-semibold">Saved Addresses</h2>

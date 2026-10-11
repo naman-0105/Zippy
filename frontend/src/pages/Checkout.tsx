@@ -39,6 +39,9 @@ const Checkout = () => {
         );
 
         setAddresses(data || []);
+        if (data && data.length > 0) {
+          setselectedAddressId((prev) => prev || data[0]._id);
+        }
       } catch (error) {
         console.log(error);
       } finally {
@@ -48,6 +51,28 @@ const Checkout = () => {
 
     fetchAddresses();
   }, [cart]);
+
+  const useDemoAddressHandler = async () => {
+    try {
+      setLoadingAddress(true);
+      await axios.post(`${restaurantService}/api/address/new`, {
+        formattedAddress: "Gnan Marg, Sri City, Andhra Pradesh 517646, India",
+        mobile: 9876543210,
+        latitude: 13.5558,
+        longitude: 80.0272,
+      });
+      const { data } = await axios.get(`${restaurantService}/api/address/all`);
+      setAddresses(data || []);
+      if (data && data.length > 0) {
+        setselectedAddressId(data[data.length - 1]._id);
+      }
+      toast.success("Demo address selected");
+    } catch {
+      toast.error("Failed to add demo address");
+    } finally {
+      setLoadingAddress(false);
+    }
+  };
 
   const navigate = useNavigate();
 
@@ -157,14 +182,46 @@ const Checkout = () => {
       </div>
 
       <div className="space-y-4 rounded-2xl border border-slate-100 bg-white p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)]">
-        <h3 className="text-lg font-bold text-slate-800">Delivery Address</h3>
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-bold text-slate-800">Delivery Address</h3>
+          {addresses.length > 0 && (
+            <button
+              type="button"
+              onClick={() => navigate("/address")}
+              className="text-xs font-bold text-indigo-600 hover:text-indigo-700"
+            >
+              + Add New
+            </button>
+          )}
+        </div>
 
         {loadingAddress ? (
           <p className="text-sm font-medium text-slate-500">Loading addresses...</p>
         ) : addresses.length === 0 ? (
-          <p className="text-sm font-medium text-slate-500">
-            No address found. Please add one
-          </p>
+          <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-5 text-center sm:text-left sm:flex sm:items-center sm:justify-between gap-4">
+            <div>
+              <p className="text-sm font-bold text-slate-800">No delivery address saved yet</p>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Choose a delivery address within the restaurant area to continue.
+              </p>
+            </div>
+            <div className="mt-3 sm:mt-0 flex flex-wrap gap-2 justify-center sm:justify-start">
+              <button
+                type="button"
+                onClick={useDemoAddressHandler}
+                className="rounded-lg bg-indigo-50 border border-indigo-200 px-3.5 py-2 text-xs font-bold text-indigo-700 hover:bg-indigo-100"
+              >
+                Use Demo Address
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate("/address")}
+                className="rounded-lg bg-indigo-600 px-3.5 py-2 text-xs font-bold text-white hover:bg-indigo-700"
+              >
+                + Add Custom Address
+              </button>
+            </div>
+          </div>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2">
             {addresses.map((add) => (

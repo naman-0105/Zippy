@@ -64,6 +64,52 @@ export const loginUser = TryCatch(async (req, res) => {
   });
 });
 
+export const demoLogin = TryCatch(async (req, res) => {
+  const { role = "customer" } = req.body || {};
+  const email =
+    role === "seller"
+      ? "seller@zippy.demo"
+      : role === "rider"
+      ? "rider@zippy.demo"
+      :  "customer@zippy.demo";
+
+  const name =
+    role === "seller"
+      ? "Zippy Demo Seller"
+      : role === "rider"
+      ? "Zippy Demo Rider"
+      : "Demo Customer";
+
+  let user = await User.findOne({ email });
+
+  if (!user) {
+    user = await User.create({
+      name,
+      email,
+      image: "https://cdn-icons-png.flaticon.com/512/149/149071.png",
+      role,
+    });
+  } else if (!user.role || (role && user.role !== role)) {
+    user.role = role;
+    await user.save();
+  }
+
+  const token = jwt.sign(
+    { user: { _id: user._id, role: user.role } },
+    process.env.JWT_SEC as string,
+    {
+      expiresIn: "15d",
+    }
+  );
+
+  res.cookie("accessToken", token, getCookieOptions());
+
+  res.status(200).json({
+    message: "Demo login successful",
+    user,
+  });
+});
+
 const allowedRoles = ["customer", "rider", "seller"] as const;
 type Role = (typeof allowedRoles)[number];
 

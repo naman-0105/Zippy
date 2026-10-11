@@ -112,7 +112,6 @@ const RestaurantOrders = ({ restaurantId }: { restaurantId: string }) => {
       {!audioUnlocked && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <span className="text-2xl">🔔</span>
             <div>
               <p className="font-medium text-blue-900">
                 Enable Sound Notification
