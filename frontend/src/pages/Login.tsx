@@ -43,7 +43,6 @@ const Login = () => {
 
       let loggedInUser = result.data.user;
 
-      // If user has no role set yet, assign the target role without asking
       if (!loggedInUser.role) {
         try {
           const roleRes = await axios.put(
@@ -97,43 +96,43 @@ const Login = () => {
   });
 
   return (
-    <div className="flex min-h-[calc(100vh-65px)] items-center justify-center bg-slate-50 px-4 py-12">
-      <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 shadow-xs sm:p-10">
+    <div className="flex min-h-[calc(100vh-65px)] items-center justify-center bg-[#fafaf9] px-4 py-12">
+      <div className="w-full max-w-md rounded-2xl border border-stone-200 bg-white p-8 shadow-xs sm:p-10">
         <div className="mb-8 flex flex-col items-center text-center">
           <Link
             to="/"
-            className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-600 text-xl font-bold text-white shadow-xs"
+            className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-orange-600 text-xl font-bold text-white shadow-xs transition hover:bg-orange-700"
           >
             Z
           </Link>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+          <h1 className="text-2xl font-bold tracking-tight text-stone-900">
             {getTitle()}
           </h1>
-          <p className="mt-2 text-sm text-slate-500">{getSubtitle()}</p>
+          <p className="mt-2 text-sm text-stone-500">{getSubtitle()}</p>
         </div>
 
         <button
           onClick={() => googleLogin()}
           disabled={loading}
-          className="flex w-full items-center justify-center gap-3 rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-xs transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+          className="flex w-full items-center justify-center gap-3 rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm font-semibold text-stone-700 shadow-xs transition-colors hover:bg-stone-50 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
         >
           <FcGoogle size={20} />
           {loading ? "Signing in..." : "Continue with Google"}
         </button>
 
         <div className="my-4 flex items-center gap-2">
-          <div className="h-px flex-1 bg-slate-200"></div>
-          <span className="text-[11px] font-semibold uppercase text-slate-400">
+          <div className="h-px flex-1 bg-stone-200"></div>
+          <span className="text-[11px] font-semibold uppercase text-stone-400">
             or preview
           </span>
-          <div className="h-px flex-1 bg-slate-200"></div>
+          <div className="h-px flex-1 bg-stone-200"></div>
         </div>
 
         <button
           type="button"
           onClick={loginAsDemo}
           disabled={loading}
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-50 border border-indigo-200 px-4 py-3 text-sm font-bold text-indigo-700 shadow-xs transition-colors hover:bg-indigo-100 disabled:opacity-60"
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-orange-50 border border-orange-200 px-4 py-3 text-sm font-bold text-orange-700 shadow-xs transition-colors hover:bg-orange-100 disabled:opacity-60"
         >
           Demo Login ({targetRole})
         </button>
@@ -142,7 +141,7 @@ const Login = () => {
           <div className="mt-6 text-center text-xs">
             <Link
               to="/login?role=customer"
-              className="font-medium text-slate-500 hover:text-indigo-600"
+              className="font-medium text-stone-500 hover:text-orange-600"
             >
               ← Back to customer login
             </Link>

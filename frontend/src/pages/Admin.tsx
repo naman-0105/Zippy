@@ -48,7 +48,7 @@ const Admin = () => {
         <button
           onClick={() => setTab("restaurant")}
           className={`px-4 py-2 rounded ${
-            tab === "restaurant" ? "bg-blue-700 text-white" : "bg-gray-200"
+            tab === "restaurant" ? "bg-orange-600 text-white shadow-xs font-semibold" : "bg-stone-200 text-stone-700 font-medium hover:bg-stone-300"
           }`}
         >
           Restaurant
@@ -57,7 +57,7 @@ const Admin = () => {
         <button
           onClick={() => setTab("rider")}
           className={`px-4 py-2 rounded ${
-            tab === "rider" ? "bg-blue-700 text-white" : "bg-gray-200"
+            tab === "rider" ? "bg-orange-600 text-white shadow-xs font-semibold" : "bg-stone-200 text-stone-700 font-medium hover:bg-stone-300"
           }`}
         >
           Riders

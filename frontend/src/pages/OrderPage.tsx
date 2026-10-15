@@ -78,7 +78,7 @@ const OrderPage = () => {
   if (loading) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-indigo-100 border-t-indigo-600"></div>
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-stone-200 border-t-orange-600"></div>
         <p className="text-sm font-semibold tracking-wide text-slate-500">Loading order...</p>
       </div>
     );
@@ -100,21 +100,21 @@ const OrderPage = () => {
         <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">
           Order #{order._id.slice(-6)}
         </h1>
-        <div className="flex items-center gap-2 rounded-full border border-indigo-100 bg-indigo-50 px-4 py-1.5 shadow-sm">
+        <div className="flex items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-4 py-1.5 shadow-sm">
           <span className="relative flex h-2.5 w-2.5">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-indigo-400 opacity-75"></span>
-            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-indigo-500"></span>
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-orange-400 opacity-75"></span>
+            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-orange-500"></span>
           </span>
-          <span className="text-sm font-bold capitalize text-indigo-700">
+          <span className="text-sm font-bold capitalize text-orange-700">
             {order.status.replace("_", " ")}
           </span>
         </div>
       </div>
 
       {order.deliveryOtp && order.status !== "delivered" && order.status !== "cancelled" && (
-        <div className="rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50/80 to-purple-50/50 p-6 shadow-[0_2px_12px_rgba(99,102,241,0.08)]">
+        <div className="rounded-2xl border border-orange-200/80 bg-gradient-to-br from-orange-50/90 to-amber-50/50 p-6 shadow-[0_2px_12px_rgba(234,88,12,0.08)]">
           <div className="text-center space-y-2">
-            <span className="inline-block rounded-full bg-indigo-100 px-3 py-1 text-xs font-bold text-indigo-700">
+            <span className="inline-block rounded-full bg-orange-100 px-3 py-1 text-xs font-bold text-orange-800">
               Delivery Verification
             </span>
             <h3 className="text-sm font-semibold text-slate-700">
@@ -124,7 +124,7 @@ const OrderPage = () => {
               {order.deliveryOtp.split("").map((digit, i) => (
                 <span
                   key={i}
-                  className="flex h-12 w-12 items-center justify-center rounded-xl border border-indigo-200 bg-white text-2xl font-black text-indigo-600 shadow-sm"
+                  className="flex h-12 w-12 items-center justify-center rounded-xl border border-orange-200 bg-white text-2xl font-black text-orange-600 shadow-sm"
                 >
                   {digit}
                 </span>
@@ -203,7 +203,7 @@ const OrderPage = () => {
           </div>
           <div className="flex-1 border-l border-slate-200 pl-4">
             <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Payment Status</p>
-            <p className={`mt-1 text-sm font-bold capitalize ${order.paymentStatus === 'paid' ? 'text-emerald-600' : 'text-indigo-600'}`}>
+            <p className={`mt-1 text-sm font-bold capitalize ${order.paymentStatus === 'paid' ? 'text-emerald-600' : 'text-orange-600'}`}>
               {order.paymentStatus}
             </p>
           </div>
@@ -222,7 +222,7 @@ const OrderPage = () => {
             />
           ) : (
             <div className="flex h-48 items-center justify-center bg-slate-50/50">
-              <p className="animate-pulse text-sm font-bold text-indigo-500">Waiting for rider location...</p>
+              <p className="animate-pulse text-sm font-bold text-orange-600">Waiting for rider location...</p>
             </div>
           )}
         </div>

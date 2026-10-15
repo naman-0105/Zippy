@@ -156,7 +156,7 @@ const Checkout = () => {
           }
         },
         theme: {
-          color: "#E23744",
+          color: "#ea580c",
         },
       };
 
@@ -188,7 +188,7 @@ const Checkout = () => {
             <button
               type="button"
               onClick={() => navigate("/address")}
-              className="text-xs font-bold text-indigo-600 hover:text-indigo-700"
+              className="text-xs font-bold text-orange-600 hover:text-orange-700"
             >
               + Add New
             </button>
@@ -209,14 +209,14 @@ const Checkout = () => {
               <button
                 type="button"
                 onClick={useDemoAddressHandler}
-                className="rounded-lg bg-indigo-50 border border-indigo-200 px-3.5 py-2 text-xs font-bold text-indigo-700 hover:bg-indigo-100"
+                className="rounded-lg bg-orange-50 border border-orange-200 px-3.5 py-2 text-xs font-bold text-orange-700 hover:bg-orange-100"
               >
                 Use Demo Address
               </button>
               <button
                 type="button"
                 onClick={() => navigate("/address")}
-                className="rounded-lg bg-indigo-600 px-3.5 py-2 text-xs font-bold text-white hover:bg-indigo-700"
+                className="rounded-lg bg-orange-600 px-3.5 py-2 text-xs font-bold text-white hover:bg-orange-700"
               >
                 + Add Custom Address
               </button>
@@ -229,14 +229,14 @@ const Checkout = () => {
                 key={add._id}
                 className={`flex cursor-pointer gap-4 rounded-xl border p-4 transition-all duration-200 ${
                   selectedAddressId === add._id
-                    ? "border-indigo-500 bg-indigo-50/50 shadow-sm ring-1 ring-indigo-500"
-                    : "border-slate-200 hover:border-indigo-200 hover:bg-slate-50"
+                    ? "border-orange-500 bg-orange-50/50 shadow-sm ring-1 ring-orange-500"
+                    : "border-slate-200 hover:border-orange-200 hover:bg-stone-50"
                 }`}
               >
                 <div className="flex h-5 items-center">
                   <input
                     type="radio"
-                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500"
+                    className="h-4 w-4 text-orange-600 focus:ring-orange-500"
                     checked={selectedAddressId === add._id}
                     onChange={() => setselectedAddressId(add._id)}
                   />
@@ -288,7 +288,7 @@ const Checkout = () => {
         </div>
 
         {subTotal < 250 && (
-          <div className="rounded-lg bg-indigo-50 px-3 py-2 text-xs font-semibold text-indigo-600">
+          <div className="rounded-lg bg-orange-50 px-3 py-2 text-xs font-semibold text-orange-700">
             Add items worth ₹{250 - subTotal} more to get Free delivery
           </div>
         )}
@@ -306,7 +306,7 @@ const Checkout = () => {
           <button
             disabled={!selectedAddressId || loadingRazorpay || creatingOrder}
             onClick={payWithRazorpay}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-3.5 text-sm font-bold text-white shadow-md shadow-indigo-200 transition-all hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-orange-600 px-4 py-3.5 text-sm font-bold text-white shadow-md shadow-orange-200 transition-all hover:bg-orange-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {loadingRazorpay || creatingOrder ? (
               <BiLoader size={18} className="animate-spin" />

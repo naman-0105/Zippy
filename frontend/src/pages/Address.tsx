@@ -177,7 +177,7 @@ const AddAddressPage = () => {
         <button
           type="button"
           onClick={fillDemoHubAddress}
-          className="inline-flex items-center gap-1.5 self-start sm:self-auto rounded-lg border border-indigo-200 bg-indigo-50 px-3.5 py-2 text-xs font-bold text-indigo-700 hover:bg-indigo-100"
+          className="inline-flex items-center gap-1.5 self-start sm:self-auto rounded-lg border border-orange-200 bg-orange-50 px-3.5 py-2 text-xs font-bold text-orange-700 hover:bg-orange-100"
         >
           <BiCompass className="h-4 w-4" />
           Fill Demo Hub Address
@@ -222,7 +222,7 @@ const AddAddressPage = () => {
         <button
           disabled={adding}
           onClick={addAddress}
-          className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-3 text-white font-semibold hover:bg-indigo-700 disabled:opacity-50"
+          className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-orange-600 px-4 py-3 text-white font-semibold hover:bg-orange-700 disabled:opacity-50"
         >
           {adding ? <BiLoader className="animate-spin" /> : <BiPlus />}
           Save Address
@@ -252,7 +252,7 @@ const AddAddressPage = () => {
               <button
                 onClick={() => deleteAddress(addr._id)}
                 disabled={deletingId === addr._id}
-                className="rounded-lg p-2 text-indigo-500 hover:bg-blue-50 disabled:opacity-50"
+                className="rounded-lg p-2 text-stone-500 hover:bg-orange-50 hover:text-orange-600 disabled:opacity-50"
               >
                 {deletingId === addr._id ? (
                   <BiLoader size={16} className="animate-spin" />

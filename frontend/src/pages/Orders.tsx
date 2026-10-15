@@ -57,7 +57,7 @@ const Orders = () => {
 if (loading) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-indigo-100 border-t-indigo-600"></div>
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-stone-200 border-t-orange-600"></div>
         <p className="text-sm font-semibold tracking-wide text-slate-500">Loading orders...</p>
       </div>
     );
@@ -136,17 +136,17 @@ const OrderRow = ({
 }) => {
 return (
     <div
-      className="group flex cursor-pointer flex-col justify-between rounded-2xl border border-slate-100 bg-white p-5 shadow-[0_2px_12px_rgba(0,0,0,0.03)] transition-all duration-200 hover:border-indigo-200 hover:bg-slate-50 hover:shadow-md"
+      className="group flex cursor-pointer flex-col justify-between rounded-2xl border border-slate-100 bg-white p-5 shadow-[0_2px_12px_rgba(0,0,0,0.03)] transition-all duration-200 hover:border-orange-200 hover:bg-stone-50 hover:shadow-md"
       onClick={onClick}
     >
       <div>
         <div className="flex items-center justify-between">
-          <p className="text-sm font-bold text-slate-800 transition-colors group-hover:text-indigo-600">
+          <p className="text-sm font-bold text-slate-800 transition-colors group-hover:text-orange-600">
             Order #{order._id.slice(-6)}
           </p>
           <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${
             ACTIVE_STATUSES.includes(order.status) 
-              ? "bg-indigo-50 text-indigo-600" 
+              ? "bg-orange-50 text-orange-700" 
               : "bg-slate-100 text-slate-500"
           }`}>
             {order.status.replace("_", " ")}

@@ -96,7 +96,7 @@ const RestaurantProfile = ({ restaurant, isSeller, onUpdate }: props) => {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Restaurant name"
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-base sm:text-lg font-bold text-slate-900 outline-none transition focus:border-blue-600 focus:bg-white focus:ring-4 focus:ring-blue-50"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-base sm:text-lg font-bold text-slate-900 outline-none transition focus:border-orange-600 focus:bg-white focus:ring-4 focus:ring-orange-50"
               />
             ) : (
               <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900">
@@ -120,7 +120,7 @@ const RestaurantProfile = ({ restaurant, isSeller, onUpdate }: props) => {
                   type="button"
                   onClick={saveChanges}
                   disabled={loading}
-                  className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700 shadow-xs disabled:opacity-50 transition"
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-orange-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-orange-700 shadow-xs disabled:opacity-50 transition"
                 >
                   <BiSave size={14} />
                   Save
@@ -129,7 +129,7 @@ const RestaurantProfile = ({ restaurant, isSeller, onUpdate }: props) => {
                 <button
                   type="button"
                   onClick={() => setEditMode(true)}
-                  className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50/50 transition"
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:text-orange-600 hover:border-orange-200 hover:bg-orange-50/50 transition"
                 >
                   <BiEdit size={14} />
                   Edit Details
@@ -145,7 +145,7 @@ const RestaurantProfile = ({ restaurant, isSeller, onUpdate }: props) => {
             onChange={(e) => setDescription(e.target.value)}
             rows={2}
             placeholder="Restaurant description"
-            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-xs sm:text-sm font-medium text-slate-800 outline-none transition focus:border-blue-600 focus:bg-white focus:ring-4 focus:ring-blue-50"
+            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-xs sm:text-sm font-medium text-slate-800 outline-none transition focus:border-orange-600 focus:bg-white focus:ring-4 focus:ring-orange-50"
           />
         ) : (
           <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
@@ -177,7 +177,7 @@ const RestaurantProfile = ({ restaurant, isSeller, onUpdate }: props) => {
                 className={`rounded-xl border px-3.5 py-1.5 text-xs font-semibold transition ${
                   isOpen
                     ? "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-                    : "border-blue-600 bg-blue-600 text-white hover:bg-blue-700 shadow-xs"
+                    : "border-orange-600 bg-orange-600 text-white hover:bg-orange-700 shadow-xs"
                 }`}
               >
                 {isOpen ? "Close Restaurant" : "Open Restaurant"}

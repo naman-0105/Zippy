@@ -68,7 +68,7 @@ const AddRestaurant = ({ fetchMyRestaurant }: props) => {
               placeholder="e.g. Spice Symphony"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs sm:text-sm font-medium text-slate-800 outline-none transition focus:border-blue-600 focus:bg-white focus:ring-4 focus:ring-blue-50"
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs sm:text-sm font-medium text-slate-800 outline-none transition focus:border-orange-600 focus:bg-white focus:ring-4 focus:ring-orange-50"
             />
           </div>
 
@@ -81,7 +81,7 @@ const AddRestaurant = ({ fetchMyRestaurant }: props) => {
               placeholder="10-digit mobile number"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs sm:text-sm font-medium text-slate-800 outline-none transition focus:border-blue-600 focus:bg-white focus:ring-4 focus:ring-blue-50"
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs sm:text-sm font-medium text-slate-800 outline-none transition focus:border-orange-600 focus:bg-white focus:ring-4 focus:ring-orange-50"
             />
           </div>
 
@@ -94,7 +94,7 @@ const AddRestaurant = ({ fetchMyRestaurant }: props) => {
               placeholder="Short description of cuisines or specialties"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs sm:text-sm font-medium text-slate-800 outline-none transition focus:border-blue-600 focus:bg-white focus:ring-4 focus:ring-blue-50"
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs sm:text-sm font-medium text-slate-800 outline-none transition focus:border-orange-600 focus:bg-white focus:ring-4 focus:ring-orange-50"
             />
           </div>
 
@@ -102,8 +102,8 @@ const AddRestaurant = ({ fetchMyRestaurant }: props) => {
             <label className="block text-xs font-bold text-slate-700 mb-1">
               Storefront Photo
             </label>
-            <label className="flex cursor-pointer items-center gap-3 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 p-4 transition hover:border-blue-400 hover:bg-blue-50/20">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+            <label className="flex cursor-pointer items-center gap-3 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 p-4 transition hover:border-orange-400 hover:bg-orange-50/20">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-orange-50 text-orange-600">
                 <BiUpload className="h-5 w-5" />
               </div>
               <span className="text-xs font-semibold text-slate-600 truncate">
@@ -123,7 +123,7 @@ const AddRestaurant = ({ fetchMyRestaurant }: props) => {
               Detected Store Location
             </label>
             <div className="flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3.5">
-              <BiMapPin className="mt-0.5 h-4 w-4 shrink-0 text-blue-600" />
+              <BiMapPin className="mt-0.5 h-4 w-4 shrink-0 text-orange-600" />
               <div className="text-xs font-medium text-slate-600">
                 {loadingLocation
                   ? "Detecting location coordinates..."
@@ -134,7 +134,7 @@ const AddRestaurant = ({ fetchMyRestaurant }: props) => {
 
           <button
             type="button"
-            className="w-full rounded-xl bg-blue-600 py-3 text-xs font-bold text-white shadow-xs hover:bg-blue-700 disabled:opacity-50 transition"
+            className="w-full rounded-xl bg-orange-600 py-3 text-xs font-bold text-white shadow-xs hover:bg-orange-700 disabled:opacity-50 transition"
             disabled={submitting}
             onClick={handleSubmit}
           >

@@ -284,7 +284,7 @@ const RiderDashboard = () => {
   if (loading) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-slate-50">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-indigo-100 border-t-indigo-600" />
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-stone-200 border-t-orange-600" />
         <p className="text-sm font-semibold tracking-wide text-slate-500">
           Loading courier dashboard...
         </p>
@@ -325,7 +325,7 @@ const RiderDashboard = () => {
                   placeholder="12-digit Aadhar number"
                   value={aadharNumber}
                   onChange={(e) => setaadharNumber(e.target.value.replace(/\D/g, ""))}
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-800 outline-none transition focus:border-indigo-600 focus:bg-white focus:ring-4 focus:ring-indigo-50"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-800 outline-none transition focus:border-orange-600 focus:bg-white focus:ring-4 focus:ring-orange-50"
                 />
               </div>
 
@@ -339,7 +339,7 @@ const RiderDashboard = () => {
                   placeholder="10-digit mobile number"
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ""))}
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-800 outline-none transition focus:border-indigo-600 focus:bg-white focus:ring-4 focus:ring-indigo-50"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-800 outline-none transition focus:border-orange-600 focus:bg-white focus:ring-4 focus:ring-orange-50"
                 />
               </div>
 
@@ -352,7 +352,7 @@ const RiderDashboard = () => {
                   placeholder="e.g. DL-0420110012345"
                   value={drivingLicenseNumber}
                   onChange={(e) => setDrivingLicenseNumber(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-800 outline-none transition focus:border-indigo-600 focus:bg-white focus:ring-4 focus:ring-indigo-50"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-800 outline-none transition focus:border-orange-600 focus:bg-white focus:ring-4 focus:ring-orange-50"
                 />
               </div>
 
@@ -360,8 +360,8 @@ const RiderDashboard = () => {
                 <label className="block text-xs font-bold text-slate-700 mb-1">
                   Courier Photo / ID
                 </label>
-                <label className="flex cursor-pointer items-center gap-3 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 p-4 transition hover:border-indigo-400 hover:bg-indigo-50/20">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-100 text-indigo-600">
+                <label className="flex cursor-pointer items-center gap-3 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 p-4 transition hover:border-orange-400 hover:bg-orange-50/20">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-orange-100 text-orange-600">
                     <BiUpload className="h-5 w-5" />
                   </div>
                   <span className="text-xs font-semibold text-slate-600 truncate">
@@ -380,7 +380,7 @@ const RiderDashboard = () => {
                 type="button"
                 disabled={submitting}
                 onClick={handleProfileSubmit}
-                className="mt-4 w-full rounded-xl bg-indigo-600 py-3.5 text-sm font-bold text-white shadow-md shadow-indigo-200 hover:bg-indigo-700 disabled:opacity-50 transition-all cursor-pointer"
+                className="mt-4 w-full rounded-xl bg-orange-600 py-3.5 text-sm font-bold text-white shadow-md shadow-orange-200 hover:bg-orange-700 disabled:opacity-50 transition-all cursor-pointer"
               >
                 {submitting ? "Submitting Registration..." : "Register as Rider"}
               </button>

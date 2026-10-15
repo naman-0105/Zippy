@@ -44,7 +44,7 @@ const Routing = ({
     const control = L.Routing.control({
       waypoints: [L.latLng(from), L.latLng(to)],
       lineOptions: {
-        styles: [{ color: "#4F46E5", weight: 5, opacity: 0.85 }],
+        styles: [{ color: "#ea580c", weight: 5, opacity: 0.85 }],
       },
       addWaypoints: false,
       draggableWaypoints: false,
@@ -135,7 +135,7 @@ const RiderOrderMap = ({ order }: Props) => {
   if (!riderLocation) {
     return (
       <div className="flex h-72 w-full flex-col items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 text-slate-500">
-        <div className="h-7 w-7 animate-spin rounded-full border-2 border-indigo-200 border-t-indigo-600 mb-2"></div>
+        <div className="h-7 w-7 animate-spin rounded-full border-2 border-stone-200 border-t-orange-600 mb-2"></div>
         <p className="text-xs font-semibold">Acquiring live map coordinates...</p>
       </div>
     );
@@ -144,7 +144,7 @@ const RiderOrderMap = ({ order }: Props) => {
   return (
     <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs">
       <div className="absolute top-3 left-3 z-[1000] flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1 shadow-md border border-slate-200/80 text-[11px] font-bold text-slate-800 backdrop-blur-xs">
-        <BiNavigation className="h-3.5 w-3.5 text-indigo-600 animate-pulse" />
+        <BiNavigation className="h-3.5 w-3.5 text-orange-600 animate-pulse" />
         <span>Live Route to Customer</span>
       </div>
 

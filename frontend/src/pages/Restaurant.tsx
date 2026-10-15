@@ -91,7 +91,7 @@ const Restaurant = () => {
   if (loading) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-slate-50">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-blue-100 border-t-blue-600" />
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-stone-200 border-t-orange-600" />
         <p className="text-xs font-semibold text-slate-500">
           Loading restaurant...
         </p>
@@ -137,7 +137,7 @@ const Restaurant = () => {
               <button
                 type="button"
                 onClick={() => setTab("add-item")}
-                className="rounded-xl bg-blue-600 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-blue-700 shadow-xs transition"
+                className="rounded-xl bg-orange-600 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-orange-700 shadow-xs transition"
               >
                 Add Item
               </button>

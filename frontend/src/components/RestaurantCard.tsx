@@ -20,7 +20,7 @@ const RestaurantCard = ({ id, image, name, distance, isOpen }: props) => {
       <div className="relative h-40 w-full overflow-hidden">
         <img
           src={image}
-          alt=""
+          alt={name}
           className={`h-full w-full object-cover transition duration-300 hover:scale-105 ${
             !isOpen ? "grayscale" : ""
           }`}

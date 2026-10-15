@@ -33,7 +33,7 @@ const RestaurantNavbar = ({
             <span className="text-lg font-black tracking-tight text-slate-900">
               Zippy
             </span>
-            <span className="inline-flex items-center gap-1 rounded-md border border-blue-100 bg-blue-50 px-2 py-0.5 text-[11px] font-bold text-blue-600">
+            <span className="inline-flex items-center gap-1 rounded-md border border-orange-200 bg-orange-50 px-2 py-0.5 text-[11px] font-bold text-orange-700">
               <BiStore className="h-3.5 w-3.5" />
               Partner
             </span>
@@ -47,8 +47,8 @@ const RestaurantNavbar = ({
                 onClick={() => onTabChange(item.key)}
                 className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
                   activeTab === item.key
-                    ? "bg-blue-600 text-white shadow-xs"
-                    : "text-slate-600 hover:text-blue-600 hover:bg-blue-50/60"
+                    ? "bg-orange-600 text-white shadow-xs"
+                    : "text-stone-600 hover:text-orange-600 hover:bg-orange-50/60"
                 }`}
               >
                 {item.label}
@@ -77,8 +77,8 @@ const RestaurantNavbar = ({
             onClick={() => onTabChange(item.key)}
             className={`shrink-0 rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
               activeTab === item.key
-                ? "bg-blue-600 text-white shadow-xs"
-                : "text-slate-600 hover:text-blue-600 hover:bg-blue-50/60"
+                ? "bg-orange-600 text-white shadow-xs"
+                : "text-stone-600 hover:text-orange-600 hover:bg-orange-50/60"
             }`}
           >
             {item.label}

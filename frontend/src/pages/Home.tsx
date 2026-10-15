@@ -79,7 +79,7 @@ const Home = () => {
   if (loadingLocation && !location) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 px-4 text-center">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-indigo-100 border-t-indigo-600"></div>
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-stone-200 border-t-orange-600"></div>
         <p className="text-sm font-semibold tracking-wide text-slate-600">
           Detecting your location...
         </p>
@@ -152,7 +152,7 @@ const Home = () => {
 
       {loading ? (
         <div className="flex min-h-[40vh] flex-col items-center justify-center gap-4">
-          <div className="h-10 w-10 animate-spin rounded-full border-4 border-indigo-100 border-t-indigo-600"></div>
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-stone-200 border-t-orange-600"></div>
           <p className="text-sm font-semibold tracking-wide text-slate-500">
             Finding restaurants near you...
           </p>
@@ -189,7 +189,7 @@ const Home = () => {
                 onClick={setDemoLocation}
                 className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100"
               >
-                <BiCompass className="h-3.5 w-3.5 text-indigo-500" />
+                <BiCompass className="h-3.5 w-3.5 text-orange-600" />
                 Switch to Demo
               </button>
             </div>
@@ -212,7 +212,7 @@ const Home = () => {
             {search ? (
               <button
                 onClick={() => setSearchParams({})}
-                className="rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-bold text-white shadow-xs hover:bg-indigo-700"
+                className="rounded-xl bg-orange-600 px-5 py-2.5 text-sm font-bold text-white shadow-xs hover:bg-orange-700"
               >
                 Clear Search
               </button>

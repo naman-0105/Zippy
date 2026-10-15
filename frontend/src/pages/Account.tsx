@@ -32,7 +32,7 @@ const Account = () => {
 
       <div className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-[0_2px_12px_rgba(0,0,0,0.03)]">
         <div className="flex items-center gap-5 border-b border-slate-100 bg-slate-50/50 p-6 sm:p-8">
-          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-500 text-2xl font-extrabold text-white shadow-lg shadow-indigo-200">
+          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500 to-amber-600 text-2xl font-extrabold text-white shadow-lg shadow-orange-200">
             {firstLetter}
           </div>
           <div className="overflow-hidden">
@@ -50,7 +50,7 @@ const Account = () => {
             className="group flex cursor-pointer items-center gap-4 rounded-2xl p-4 transition-all hover:bg-slate-50"
             onClick={() => navigate("/orders")}
           >
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 transition-colors group-hover:bg-indigo-100 group-hover:text-indigo-700">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-orange-50 text-orange-600 transition-colors group-hover:bg-orange-100 group-hover:text-orange-700">
               <BiPackage className="h-6 w-6" />
             </div>
             <span className="text-base font-bold text-slate-700 group-hover:text-slate-900">
@@ -62,7 +62,7 @@ const Account = () => {
             className="group flex cursor-pointer items-center gap-4 rounded-2xl p-4 transition-all hover:bg-slate-50"
             onClick={() => navigate("/address")}
           >
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 transition-colors group-hover:bg-indigo-100 group-hover:text-indigo-700">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-orange-50 text-orange-600 transition-colors group-hover:bg-orange-100 group-hover:text-orange-700">
               <BiMapPin className="h-6 w-6" />
             </div>
             <span className="text-base font-bold text-slate-700 group-hover:text-slate-900">

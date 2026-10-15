@@ -49,7 +49,7 @@ const RestaurantPage = () => {
 if (loading) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 bg-slate-50">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-indigo-100 border-t-indigo-600"></div>
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-stone-200 border-t-orange-600"></div>
         <p className="text-sm font-semibold tracking-wide text-slate-500">Loading restaurant...</p>
       </div>
     );
@@ -77,7 +77,7 @@ if (loading) {
       <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)] sm:p-8">
         <div className="mb-6 flex items-center justify-between border-b border-slate-100 pb-4">
           <h2 className="text-2xl font-extrabold text-slate-900">Menu</h2>
-          <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-bold text-indigo-600">
+          <span className="rounded-full bg-orange-50 px-3 py-1 text-xs font-bold text-orange-700">
             {menuItems.length} {menuItems.length === 1 ? 'Item' : 'Items'}
           </span>
         </div>

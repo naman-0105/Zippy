@@ -129,7 +129,7 @@ const MenuItems = ({ items, onItemDeleted, isSeller }: MenuItemsProps) => {
                   <button
                     type="button"
                     onClick={() => toggleAvailiblity(item._id)}
-                    className="rounded-lg border border-slate-200 p-1.5 text-slate-600 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600 transition"
+                    className="rounded-lg border border-slate-200 p-1.5 text-slate-600 hover:border-orange-200 hover:bg-orange-50 hover:text-orange-600 transition"
                   >
                     {item.isAvailable ? (
                       <BsEye size={15} />
@@ -156,7 +156,7 @@ const MenuItems = ({ items, onItemDeleted, isSeller }: MenuItemsProps) => {
                   className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold transition ${
                     !item.isAvailable || isLoading
                       ? "cursor-not-allowed bg-slate-100 text-slate-400"
-                      : "bg-blue-600 text-white hover:bg-blue-700 shadow-xs"
+                      : "bg-orange-600 text-white hover:bg-orange-700 shadow-xs"
                   }`}
                 >
                   {isLoading ? (

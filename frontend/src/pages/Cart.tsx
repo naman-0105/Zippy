@@ -172,7 +172,7 @@ const Cart = () => {
 
         <button
           onClick={checkout}
-          className={`mt-3 w-full rounded-lg bg-blue-700 py-3 text-sm font-semibold text-white hover:bg-blue-800 ${
+          className={`mt-3 w-full rounded-lg bg-orange-600 py-3 text-sm font-semibold text-white hover:bg-orange-700 transition shadow-sm ${
             !restaurant.isOpen ? "opacity-50 cursor-not-allowed" : ""
           }`}
           disabled={!restaurant.isOpen}

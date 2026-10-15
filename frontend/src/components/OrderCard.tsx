@@ -114,7 +114,7 @@ const OrderCard = ({ order, onStatusUpdate }: props) => {
               type="button"
               disabled={loading}
               onClick={() => updateStatus(status)}
-              className="rounded-xl bg-blue-600 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-blue-700 shadow-xs disabled:opacity-50 transition"
+              className="rounded-xl bg-orange-600 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-orange-700 shadow-xs disabled:opacity-50 transition"
             >
               Mark as {status.replaceAll("_", " ")}
             </button>
@@ -128,7 +128,7 @@ const OrderCard = ({ order, onStatusUpdate }: props) => {
             type="button"
             disabled={loading}
             onClick={() => updateStatus("ready_for_rider")}
-            className="w-full rounded-xl border border-blue-600 py-2 text-xs font-semibold text-blue-600 hover:bg-blue-50 disabled:opacity-50 transition"
+            className="w-full rounded-xl border border-orange-600 py-2 text-xs font-semibold text-orange-600 hover:bg-orange-50 disabled:opacity-50 transition"
           >
             Retry Ready for Rider
           </button>

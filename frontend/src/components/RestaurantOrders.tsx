@@ -123,16 +123,16 @@ const RestaurantOrders = ({
   return (
     <div className="space-y-6">
       {view !== "completed" && !audioUnlocked && (
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 rounded-2xl border border-blue-200 bg-blue-50/70 p-4 shadow-xs">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 rounded-2xl border border-orange-200 bg-orange-50/70 p-4 shadow-xs">
           <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-orange-100 text-orange-600">
               <BiVolumeFull className="h-4 w-4" />
             </div>
             <div>
-              <p className="text-xs font-bold text-blue-900">
+              <p className="text-xs font-bold text-orange-950">
                 Enable Sound Alerts
               </p>
-              <p className="text-xs text-blue-700">
+              <p className="text-xs text-orange-800">
                 Get audio alerts when new orders arrive.
               </p>
             </div>
@@ -141,7 +141,7 @@ const RestaurantOrders = ({
           <button
             type="button"
             onClick={unlockAudio}
-            className="rounded-xl bg-blue-600 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-blue-700 shadow-xs transition self-end sm:self-auto"
+            className="rounded-xl bg-orange-600 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-orange-700 shadow-xs transition self-end sm:self-auto"
           >
             Enable Sound
           </button>
